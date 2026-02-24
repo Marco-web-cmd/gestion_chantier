@@ -162,9 +162,9 @@ tbody td{padding:11px 14px;font-size:13.5px;vertical-align:middle;}
 </style>
 </head>
 <body>
-<div id="loader"><div class="loader-logo">Bati<span>Pilot</span></div><div class="spinner"></div><div class="loader-text" id="loader-text">Connexion en cours...</div></div>
+<div id="loader" style="display:none"><div class="loader-logo">Bati<span>Pilot</span></div><div class="spinner"></div><div class="loader-text" id="loader-text">Chargement...</div></div>
 
-<div id="auth-screen">
+<div id="auth-screen" style="display:flex">
   <div class="auth-card">
     <div class="auth-logo">Bati<span>Pilot</span></div>
     <div class="auth-sub">Gestion de chantiers professionnelle</div>
@@ -885,26 +885,34 @@ function printFiche(cid){
 let _appLoaded=false;
 
 async function startApp(user){
-  if(_appLoaded)return; // Empêcher le double déclenchement
+  if(_appLoaded)return;
   _appLoaded=true;
   USER=user;
   $('auth-screen').style.display='none';
   $('onboarding').style.display='none';
+  loader('Chargement de vos données...');
   await loadAll();
 }
 
-// Timeout de sécurité : 8s max pour le loader
-setTimeout(()=>{
-  if($('loader').style.display!=='none'){
-    console.warn('Timeout boot - affichage connexion');
-    hideLoader();
-    $('auth-screen').style.display='flex';
+// Vérifier session existante au démarrage (localStorage)
+// Supabase stocke le token en localStorage → pas besoin d'attendre le réseau
+(async()=>{
+  try{
+    // getSession() lit d'abord le localStorage → instantané si déjà connecté
+    const {data:{session}}=await SB.auth.getSession();
+    if(session?.user){
+      await startApp(session.user);
+    }
+    // Sinon auth-screen déjà visible (display:flex par défaut dans le HTML)
+  }catch(e){
+    console.warn('getSession:',e);
+    // Auth screen déjà visible, rien à faire
   }
-},8000);
+})();
 
 SB.auth.onAuthStateChange(async(event,session)=>{
-  console.log('Auth:',event, session?.user?.email||'none');
-  if(session?.user){
+  console.log('Auth:',event,session?.user?.email||'none');
+  if(event==='SIGNED_IN'&&session?.user){
     await startApp(session.user);
   }else if(event==='SIGNED_OUT'){
     _appLoaded=false;
@@ -914,18 +922,6 @@ SB.auth.onAuthStateChange(async(event,session)=>{
     $('onboarding').style.display='none';
   }
 });
-
-// Fallback immédiat via getSession
-(async()=>{
-  try{
-    const {data:{session}}=await SB.auth.getSession();
-    if(session?.user)await startApp(session.user);
-    else{hideLoader();$('auth-screen').style.display='flex';}
-  }catch(e){
-    console.warn('getSession error:',e);
-    hideLoader();$('auth-screen').style.display='flex';
-  }
-})();
 </script>
 </body>
 </html>
