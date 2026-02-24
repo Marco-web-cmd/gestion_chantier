@@ -481,16 +481,57 @@ function pgDashboard(){
 
 // ── CHANTIERS ─────────────────────────────────────
 function pgChantiers(){
-  $('t-pri').style.display='inline-flex';$('t-pri').textContent='+ Nouveau chantier';$('t-pri').onclick=()=>modalChantier();
+  $('t-pri').style.display='inline-flex';$('t-pri').textContent='+ Nouveau chantier';$('t-pri').onclick=function(){modalChantier();};
   const fE=$('f-etat')?.value||'',fQ=$('f-equipe')?.value||'',fS=$('f-search')?.value?.toLowerCase()||'';
   let ch=[...D.chantiers];
   if(fE)ch=ch.filter(c=>c.etat===fE);if(fQ)ch=ch.filter(c=>c.equipe===fQ);
   if(fS)ch=ch.filter(c=>c.nom?.toLowerCase().includes(fS)||c.client?.toLowerCase().includes(fS));
   const metrics=(D.settings.metrics||[]).filter(m=>m.label?.trim());
-  const tbody=ch.length?ch.map(c=>{const r=+c.devis>0?Math.round(+c.marge/+c.devis*100):0;const md=metrics.length&&c.metrics?metrics.map((m,i)=>`${m.label}:${c.metrics[i]??0}${m.unit?' '+m.unit:''}`).join(' · '):'';return`<tr><td><strong style="cursor:pointer" onclick="modalChantier('${c.id}')">${c.nom}</strong><br><span class="td-muted">${c.client||'—'}</span>${md?`<br><span class="td-muted text-sm">${md}</span>`:''}</td><td>${etatB(c.etat)}</td><td class="td-muted">${c.equipe||'—'}</td><td class="td-muted" style="font-size:12px">${fdate(c.date_debut)} → ${fdate(c.date_fin)}</td><td class="td-mono">${eur(c.devis)}</td><td class="td-mono" style="color:${r>=15?'var(--success)':r>=5?'var(--warning)':'var(--danger)'};font-weight:700">${eur(c.marge)}<br><span style="font-size:10px">${r}%</span></td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="openFicheChantier('${c.id}')" title="Fiche complète">👁️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="modalChantier('${c.id}')" title="Modifier">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="delChantier('${c.id}')">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🚧</div><div class="empty-title">Aucun chantier</div></div></td></tr>`;
-  const equipeOpts=['Non assigné'].concat(D.settings.teams).map(t=>`<option>${t}</option>`).join('');
-  setContent(`<div class="page-header"><div class="page-title">Chantiers (${D.chantiers.length})</div></div><div class="flex gap-3 mb-6" style="flex-wrap:wrap"><select id="f-etat" onchange="pgChantiers()" style="width:auto;min-width:140px"><option value="">Tous états</option><option>Devis</option><option>En cours</option><option>En pause</option><option>Terminé</option><option>Annulé</option></select><select id="f-equipe" onchange="pgChantiers()" style="width:auto;min-width:160px"><option value="">Toutes équipes</option>${equipeOpts}</select><input id="f-search" type="search" placeholder="🔍 Rechercher..." onkeyup="pgChantiers()" style="width:auto;min-width:200px"></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table><thead><tr><th>Chantier / Client</th><th>État</th><th>Équipe</th><th>Dates</th><th>Devis TTC</th><th>Marge</th><th></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
+  function chRow(c){
+    const r=+c.devis>0?Math.round(+c.marge/+c.devis*100):0;
+    const md=metrics.length&&c.metrics?metrics.map((m,i)=>m.label+':'+(c.metrics[i]??0)+(m.unit?' '+m.unit:'')).join(' · '):'';
+    const dvCount=D.devis_docs.filter(d=>d.chantier_id===c.id).length;
+    const dvBadge=dvCount?'<span class="badge badge-blue" style="font-size:10px;margin-left:4px">'+dvCount+' devis</span>':'<span class="badge badge-gray" style="font-size:10px;margin-left:4px;opacity:0.5">0 devis</span>';
+    return'<tr>'
+      +'<td><strong class="ch-nom-link" data-cid="'+c.id+'" style="cursor:pointer;color:var(--accent)">'+c.nom+'</strong>'+dvBadge
+      +'<br><span class="td-muted">'+(c.client||'—')+'</span>'
+      +(md?'<br><span class="td-muted text-sm">'+md+'</span>':'')
+      +'</td>'
+      +'<td>'+etatB(c.etat)+'</td>'
+      +'<td class="td-muted">'+(c.equipe||'—')+'</td>'
+      +'<td class="td-muted" style="font-size:12px">'+fdate(c.date_debut)+' → '+fdate(c.date_fin)+'</td>'
+      +'<td class="td-mono">'+eur(c.devis)+'</td>'
+      +'<td class="td-mono" style="color:'+(r>=15?'var(--success)':r>=5?'var(--warning)':'var(--danger)')+';font-weight:700">'+eur(c.marge)+'<br><span style="font-size:10px">'+r+'%</span></td>'
+      +'<td style="white-space:nowrap">'
+        +'<button class="btn btn-ghost btn-icon btn-sm" data-ch-fiche="'+c.id+'" title="Fiche complète">👁️</button>'
+        +'<button class="btn btn-ghost btn-icon btn-sm" data-ch-edit="'+c.id+'" title="Modifier">✏️</button>'
+        +'<button class="btn btn-ghost btn-icon btn-sm" data-ch-del="'+c.id+'" title="Supprimer">🗑️</button>'
+      +'</td>'
+    +'</tr>';
+  }
+  const tbody=ch.length?ch.map(chRow).join(''):'<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🚧</div><div class="empty-title">Aucun chantier</div><div class="empty-desc">Les chantiers sont créés automatiquement depuis vos devis</div></div></td></tr>';
+  const equipeOpts=['Non assigné'].concat(D.settings.teams).map(t=>'<option>'+t+'</option>').join('');
+  setContent('<div class="page-header"><div class="page-title">Chantiers ('+D.chantiers.length+')</div></div>'
+    +'<div class="flex gap-3 mb-6" style="flex-wrap:wrap">'
+    +'<select id="f-etat" onchange="pgChantiers()" style="width:auto;min-width:140px"><option value="">Tous états</option><option>Devis</option><option>En cours</option><option>En pause</option><option>Terminé</option><option>Annulé</option></select>'
+    +'<select id="f-equipe" onchange="pgChantiers()" style="width:auto;min-width:160px"><option value="">Toutes équipes</option>'+equipeOpts+'</select>'
+    +'<input id="f-search" type="search" placeholder="🔍 Rechercher chantier / client..." onkeyup="pgChantiers()" style="width:auto;min-width:200px">'
+    +'</div>'
+    +'<div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)">'
+    +'<table><thead><tr><th>Chantier / Devis</th><th>État</th><th>Équipe</th><th>Dates</th><th>Montant TTC</th><th>Marge</th><th></th></tr></thead>'
+    +'<tbody>'+tbody+'</tbody></table></div></div>'
+  );
   if(fE){const e=$('f-etat');if(e)e.value=fE;}if(fQ){const e=$('f-equipe');if(e)e.value=fQ;}if(fS){const e=$('f-search');if(e)e.value=fS;}
+  // Event delegation
+  const tbl=document.querySelector('#content .table-wrapper');
+  if(tbl)tbl.addEventListener('click',function(e){
+    const el=e.target.closest('[data-ch-fiche],[data-ch-edit],[data-ch-del],[data-cid]')||e.target;
+    if(el.dataset.chFiche)openFicheChantier(el.dataset.chFiche);
+    else if(el.dataset.chEdit)modalChantier(el.dataset.chEdit);
+    else if(el.dataset.chDel)delChantier(el.dataset.chDel);
+    else if(el.dataset.cid)openFicheChantier(el.dataset.cid);
+    else if(el.classList.contains('ch-nom-link'))openFicheChantier(el.dataset.cid);
+  });
 }
 function modalChantier(id=null){
   const c=id?D.chantiers.find(x=>x.id===id):null;
@@ -654,11 +695,30 @@ async function cycleDevisStatut(dvId){
   d.statut=next;
   await SB.from('devis_docs').update({statut:next}).eq('id',dvId).eq('user_id',USER.id);
   toast('Statut → '+next);
-  // Quand un devis passe en Accepté → proposer de créer un chantier
+  // Quand Accepté : garantir que le client existe, puis logique chantier
   if(next==='Accepté'){
-    const alreadyLinked=d.chantier_id&&D.chantiers.find(c=>c.id===d.chantier_id);
-    if(!alreadyLinked){
+    await ensureClient(d.client,d.client_adresse,d.client_ville);
+    // Proposer création chantier si pas encore lié
+    if(!d.chantier_id){
       setTimeout(()=>proposerChantierFromDevis(dvId),400);
+    }
+  }
+  // Quand Accepté → mettre le chantier lié en "En cours" automatiquement
+  if(next==='Accepté'&&d.chantier_id){
+    const ch=D.chantiers.find(c=>c.id===d.chantier_id);
+    if(ch&&ch.etat==='Devis'){
+      ch.etat='En cours';
+      await SB.from('chantiers').update({etat:'En cours'}).eq('id',ch.id).eq('user_id',USER.id);
+      toast('Chantier "'+ch.nom+'" passé En cours ✅');
+    }
+  }
+  // Quand Refusé → mettre le chantier lié en "Annulé"
+  if(next==='Refusé'&&d.chantier_id){
+    const ch=D.chantiers.find(c=>c.id===d.chantier_id);
+    if(ch&&ch.etat==='Devis'){
+      ch.etat='Annulé';
+      await SB.from('chantiers').update({etat:'Annulé'}).eq('id',ch.id).eq('user_id',USER.id);
+      toast('Chantier "'+ch.nom+'" annulé','error');
     }
   }
   if(D.page==='devis')pgDevis();
@@ -696,11 +756,8 @@ async function createChantierFromDevis(dvId){
   // Lier le devis au chantier
   d.chantier_id=data.id;
   await SB.from('devis_docs').update({chantier_id:data.id}).eq('id',dvId).eq('user_id',USER.id);
-  // Créer le client si pas encore dans la base
-  if(d.client&&!D.clients.find(c=>c.nom===d.client)){
-    const nc={id:uid(),nom:d.client,email:'',tel:'',adresse:(d.client_adresse||(d.client_ville?d.client_adresse+', '+d.client_ville:''))||''};
-    D.clients.push(nc);await insert('clients',nc);
-  }
+  // Garantir que le client existe
+  await ensureClient(d.client,d.client_adresse,d.client_ville);
   const saved=await insert('chantiers',data);
   if(saved){D.chantiers[0]=saved;toast('Chantier créé ! 🎉');}
   go('chantiers');
@@ -716,22 +773,23 @@ function modalDevisCreate(chantierId){
     <div class="form-group"><label>Validité (jours)</label><input id="dv-valid" type="number" value="30"></div>
   </div>
   <div class="form-row form-row-2">
-    <div class="form-group"><label>Chantier lié</label><select id="dv-ch"><option value="">— Aucun —</option>${chOpts}</select></div>
     <div class="form-group"><label>Statut</label><select id="dv-statut"><option>Brouillon</option><option>Envoyé</option><option>Accepté</option><option>Refusé</option></select></div>
+    <div class="form-group"><label>TVA (%)</label><input id="dv-tva" type="number" value="${D.settings.tva||20}" min="0" max="100" step="0.1" oninput="$('dv-tva-rate').textContent=this.value;calcDevisTotal()"></div>
   </div>
-  <div style="font-family:var(--font-display);font-size:13px;font-weight:700;margin:12px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">Client & Chantier</div>
+  <div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin:14px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--accent)">👤 Client & Chantier</div>
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;background:var(--accent-soft);padding:8px 12px;border-radius:var(--radius-sm)">
+    ✨ <strong>Le chantier est créé automatiquement</strong> depuis ce devis. Renseignez le client et la référence.
+  </div>
   <div class="form-row form-row-2">
-    <div class="form-group"><label>Nom client *</label><input id="dv-client" placeholder="Nom du client / entreprise" list="cl-dv"><datalist id="cl-dv">${clOpts}</datalist></div>
-    <div class="form-group"><label>Référence chantier</label><input id="dv-ref" placeholder="Ex: Coliving - Bordeaux"></div>
+    <div class="form-group"><label>Nom client *</label><input id="dv-client" placeholder="Nom du client / entreprise" list="cl-dv" oninput="dvAutoFill(this.value)"><datalist id="cl-dv">${clOpts}</datalist></div>
+    <div class="form-group"><label>Référence chantier (nom)</label><input id="dv-ref" placeholder="Ex: Coliving Bordeaux, Villa Martin..."></div>
   </div>
+  
   <div class="form-row form-row-2">
     <div class="form-group"><label>Adresse client</label><input id="dv-adr" placeholder="200 Route de Grimard"></div>
     <div class="form-group"><label>CP / Ville client</label><input id="dv-ville" placeholder="33670 La Sauve"></div>
   </div>
-  <div class="form-row form-row-2">
-    <div class="form-group"><label>Objet du devis</label><input id="dv-objet" placeholder="Ex: Pose de sol, Électricité..."></div>
-    <div class="form-group"><label>TVA (%)</label><input id="dv-tva" type="number" value="${D.settings.tva||20}" min="0" max="100" step="0.1" oninput="$('dv-tva-rate').textContent=this.value;calcDevisTotal()"></div>
-  </div>
+  <div class="form-group"><label>Objet du devis</label><input id="dv-objet" placeholder="Ex: Pose de sol, Installation électrique..."></div>
   <div style="font-family:var(--font-display);font-size:13px;font-weight:700;margin:12px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">Lignes du devis <span style="font-size:11px;font-weight:400;color:var(--text-muted)">— Désignation libre, unité libre</span></div>
   <div style="display:grid;grid-template-columns:3fr 70px 80px 100px 34px;gap:6px;margin-bottom:6px;padding:0 10px">
     <span style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase">Désignation</span>
@@ -749,21 +807,29 @@ function modalDevisCreate(chantierId){
     <div class="flex justify-between" style="font-size:16px"><span style="font-weight:700">Total TTC</span><strong id="dv-tot-ttc" style="color:var(--accent)">0,00 €</strong></div>
   </div>`;
   modal('Nouveau devis',body,`<button class="btn btn-secondary" onclick="closeModal()">Annuler</button><button class="btn btn-secondary" onclick="saveDevis(true)">💾 Sauvegarder</button><button class="btn btn-primary" onclick="saveAndPrintDevis()">🖨️ Imprimer</button>`,'modal-lg');
-  $('dv-ch').addEventListener('change',function(){
-    const c=D.chantiers.find(x=>x.id===this.value);
-    if(c){
-      if(!$('dv-client').value)$('dv-client').value=c.client||'';
-      if(!$('dv-ref').value)$('dv-ref').value=c.nom||'';
-      // Auto-remplir adresse depuis clients
-      const cl=D.clients.find(x=>x.nom===c.client);
-      if(cl&&cl.adresse&&!$('dv-adr').value){
-        const parts=cl.adresse.split(',');
-        $('dv-adr').value=parts[0]||cl.adresse;
-        if(parts[1])$('dv-ville').value=parts[1].trim();
-      }
-    }
-  });
+  // Auto-remplir depuis le client sélectionné
   addDevisLine();addDevisLine();addDevisLine();
+  // Si appelé depuis un chantier existant → pré-remplir
+  if(chantierId){
+    const c=D.chantiers.find(x=>x.id===chantierId);
+    if(c){
+      $('dv-client').value=c.client||'';
+      $('dv-ref').value=c.nom||'';
+      dvAutoFill(c.client||'');
+    }
+  }
+}
+function dvAutoFill(clientNom){
+  if(!clientNom)return;
+  const cl=D.clients.find(x=>x.nom.toLowerCase()===clientNom.toLowerCase()||x.nom===clientNom);
+  if(cl){
+    if(cl.adresse&&!$('dv-adr').value){
+      // Séparer adresse et ville si format "rue, CP ville"
+      const m=cl.adresse.match(/^(.+),\s*(\d{5}.*)$/);
+      if(m){$('dv-adr').value=m[1].trim();$('dv-ville').value=m[2].trim();}
+      else{$('dv-adr').value=cl.adresse;}
+    }
+  }
 }
 function addDevisLine(){
   const i=devisLines.length;devisLines.push({desc:'',qte:1,u:'',pu:0,total:0});
@@ -778,39 +844,113 @@ function calcDevisTotal(){
   if($('dv-tot-tva'))$('dv-tot-tva').textContent=eur(ht*tv);
   if($('dv-tot-ttc'))$('dv-tot-ttc').textContent=eur(ht*(1+tv));
 }
+// ── Garantir qu'un client existe dans la base ──────────────
+// Appelé depuis saveDevis, cycleDevisStatut et createChantierFromDevis
+async function ensureClient(nom,adresse,ville){
+  if(!nom)return;
+  if(D.clients.find(c=>c.nom===nom))return; // déjà présent
+  const adr=[adresse,ville].filter(Boolean).join(', ');
+  const nc={id:uid(),nom,email:'',tel:'',adresse:adr,notes:''};
+  D.clients.push(nc);
+  const saved=await insert('clients',nc);
+  if(saved){
+    // Remplacer l'objet local par celui retourné (avec id Supabase)
+    const idx=D.clients.findIndex(c=>c.id===nc.id);
+    if(idx>=0)D.clients[idx]=saved;
+  }
+}
+
 async function saveDevis(doClose=true){
   const lines=(devisLines||[]).filter(l=>l&&(l.desc?.trim()||l.pu>0));
   const ht=lines.reduce((a,l)=>a+(+l.total||0),0);
   const tv=+($('dv-tva')?.value||D.settings.tva||20)/100;
+  const clientNom=($('dv-client')?.value||'').trim();
+  const refChantier=($('dv-ref')?.value||'').trim();
+  const nomChantier=refChantier||clientNom||('Devis '+($('dv-num')?.value||'').trim());
+
+  // ── ÉTAPE 1 : Trouver ou créer le chantier D'ABORD ──────────────
+  let chantierId=null;
+  let chantierNom='';
+  if(clientNom){
+    // Chercher un chantier existant exact (même client + même nom)
+    const existing=D.chantiers.find(c=>
+      c.client===clientNom &&
+      (c.nom===nomChantier||c.nom===refChantier||c.nom===clientNom) &&
+      (c.etat==='Devis'||c.etat==='En cours')
+    );
+    if(existing){
+      chantierId=existing.id;
+      chantierNom=existing.nom;
+      // Mettre à jour le montant du chantier si 0
+      if(!existing.devis||+existing.devis===0){
+        existing.devis=ht*(1+tv);
+        existing.marge=existing.devis-(existing.cout_mat||0);
+        await SB.from('chantiers').update({devis:existing.devis,marge:existing.marge}).eq('id',chantierId).eq('user_id',USER.id);
+      }
+    } else {
+      // Créer un nouveau chantier
+      const chData={
+        id:uid(),nom:nomChantier,client:clientNom,
+        etat:'Devis',equipe:'Non assigné',
+        devis:ht*(1+tv),date_debut:($('dv-date')?.value||today()),
+        date_fin:'',notes:'Chantier créé depuis devis '+($('dv-num')?.value||'').trim(),
+        metrics:[],cout_mat:0,marge:ht*(1+tv)
+      };
+      const savedCh=await insert('chantiers',chData);
+      if(savedCh){
+        chantierId=savedCh.id;
+        chantierNom=savedCh.nom;
+        D.chantiers.unshift(savedCh);
+      }
+    }
+    // Garantir que le client existe dans la base
+    await ensureClient(clientNom,($('dv-adr')?.value||'').trim(),($('dv-ville')?.value||'').trim());
+  }
+
+  // ── ÉTAPE 2 : Insérer le devis AVEC le chantier_id déjà connu ──
   const data={
-    id:uid(),numero:$('dv-num')?.value.trim(),date:$('dv-date')?.value,
-    chantier_id:$('dv-ch')?.value||null,client:$('dv-client')?.value.trim(),
-    client_adresse:$('dv-adr')?.value.trim()||'',client_ville:$('dv-ville')?.value.trim()||'',
-    ref_chantier:$('dv-ref')?.value.trim()||'',objet:$('dv-objet')?.value.trim()||'',
-    statut:$('dv-statut')?.value||'Brouillon',tva_pct:tv*100,
+    id:uid(),
+    numero:($('dv-num')?.value||'').trim(),
+    date:($('dv-date')?.value||today()),
+    chantier_id:chantierId,          // ← déjà renseigné dès l'insertion
+    client:clientNom,
+    client_adresse:($('dv-adr')?.value||'').trim(),
+    client_ville:($('dv-ville')?.value||'').trim(),
+    ref_chantier:refChantier,
+    objet:($('dv-objet')?.value||'').trim(),
+    statut:($('dv-statut')?.value||'Brouillon'),
+    tva_pct:tv*100,
     total_ht:ht,total_tva:ht*tv,total_ttc:ht*(1+tv),
     lignes:lines.map(l=>({desc:l.desc,qte:+l.qte,u:l.u||'',pu:+l.pu,total:+l.total})),
-    validite:+$('dv-valid')?.value||30,mentions:$('dv-mentions')?.value||''
+    validite:+($('dv-valid')?.value||30),
+    mentions:($('dv-mentions')?.value||'')
   };
+
   if(doClose)closeModal();
   const saved=await insert('devis_docs',data);
-  if(saved){
-    D.devis_docs.unshift(saved);
-    toast('Devis sauvegardé !');
-    // Auto-créer le client s'il n'existe pas encore
-    if(data.client&&!D.clients.find(c=>c.nom===data.client)){
-      const addr=data.client_adresse?data.client_adresse+(data.client_ville?', '+data.client_ville:''):'';
-      const nc={id:uid(),nom:data.client,email:'',tel:'',adresse:addr,notes:''};
-      D.clients.push(nc);
-      insert('clients',nc);
-    }
-  }
+  if(!saved)return null;
+  D.devis_docs.unshift(saved);
+
+  if(chantierNom)toast('✅ Devis + chantier "'+chantierNom+'" enregistrés');
+  else toast('Devis sauvegardé !');
+
   devisLines=[];
+  // Rafraîchir la vue
+  setTimeout(function(){
+    if(D.page==='devis')pgDevis();
+    else if(D.page==='chantiers')pgChantiers();
+    else if(D.page==='dashboard')pgDashboard();
+    else pgChantiers(); // fallback
+  },200);
   return saved;
 }
 async function saveAndPrintDevis(){
   const saved=await saveDevis(true);
-  if(saved)setTimeout(()=>printDevis(saved.id),400);
+  if(saved){
+    setTimeout(()=>printDevis(saved.id),400);
+    if(D.page==='devis')setTimeout(()=>pgDevis(),600);
+    else if(D.page==='chantiers')setTimeout(()=>pgChantiers(),600);
+  }
 }
 
 // ── FACTURES ──────────────────────────────────────
