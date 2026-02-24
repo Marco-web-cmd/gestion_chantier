@@ -192,7 +192,7 @@ tbody td{padding:11px 14px;font-size:13.5px;vertical-align:middle;}
 <div id="onboarding">
   <div class="ob-card">
     <div class="ob-logo">Bati<span>Pilot</span></div>
-    <div class="ob-sub">CONFIGURONS VOTRE ESPACE</div>
+    <div class="ob-sub">CONFIGURONS VOTRE ESPACE — 2 MINUTES</div>
     <div class="step-dots"><div class="step-dot active" id="dot-0"></div><div class="step-dot" id="dot-1"></div><div class="step-dot" id="dot-2"></div></div>
     <div class="ob-step active" id="step-0">
       <div class="step-title">Bienvenue 👷</div>
@@ -223,6 +223,7 @@ tbody td{padding:11px 14px;font-size:13.5px;vertical-align:middle;}
       <div class="flex gap-2 mb-4" style="align-items:flex-end"><div style="flex:1"><label>Catégorie matériaux</label><input id="ob-cat" placeholder="Ex: Électricité, Plomberie..." onkeydown="if(event.key==='Enter')obAddCat()"></div><button class="btn btn-secondary" onclick="obAddCat()">+ Ajouter</button></div>
       <div id="ob-cats" style="min-height:36px;padding:6px 8px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:20px"></div>
       <div class="flex gap-2"><button class="btn btn-secondary" onclick="obNext(1)" style="flex:1">← Retour</button><button class="btn btn-primary" id="ob-finish" onclick="obFinish()" style="flex:2;padding:12px;font-size:15px">🚀 Lancer BatiPilot</button></div>
+      <div style="text-align:center;margin-top:14px"><a href="#" onclick="obSkip()" style="font-size:12px;color:var(--text-muted)">Passer pour l'instant, configurer plus tard</a></div>
     </div>
   </div>
 </div>
@@ -323,7 +324,10 @@ async function doSignup(){
   if(error){authMsg(error.message,'error');return;}
   // Si confirmation email désactivée, l'utilisateur est connecté directement
   if(data.session){return;} // onAuthStateChange gérera la suite
-  authMsg('Compte créé ! Connectez-vous maintenant.','success');switchTab('login');
+  authMsg('✅ Compte créé ! Connectez-vous maintenant pour configurer votre espace.','success');
+  switchTab('login');
+  // Pré-remplir l'email pour faciliter la connexion
+  try{$('l-email').value=$('s-email').value;}catch(e){}
 }
 async function resetPwd(){const email=prompt('Votre adresse email :');if(!email)return;const{error}=await SB.auth.resetPasswordForEmail(email);if(error)toast('Erreur : '+error.message,'error');else toast('Email de réinitialisation envoyé !');}
 async function doLogout(){await SB.auth.signOut();USER=null;D={...D,chantiers:[],stocks:[],materiaux:[],clients:[],mouvements:[],devis_docs:[],factures:[]};$('app').classList.remove('visible');$('auth-screen').style.display='flex';toast('Déconnecté','error');}
@@ -355,7 +359,7 @@ async function loadAll(){
     if(sr.data){
       D.settings={
         company:sr.data.company||'',trade:sr.data.trade||'',phone:sr.data.phone||'',email:sr.data.email||'',
-        adresse:sr.data.adresse||'',siret:sr.data.siret||'',logo:sr.data.logo||'',tva:sr.data.tva??20,
+        adresse:sr.data.adresse||'',siret:sr.data.siret||'',tva_num:sr.data.tva_num||'',logo:sr.data.logo||'',tva:sr.data.tva??20,
         teams:sr.data.teams||[],categories:sr.data.categories||['Matériaux','Consommable','Outillage'],
         accent_color:sr.data.accent_color||'#C0622A',metrics:sr.data.metrics||JSON.parse(JSON.stringify(DM))
       };
@@ -388,7 +392,8 @@ async function saveSetting(){
   showSync();
   const p={
     user_id:USER.id,company:D.settings.company,trade:D.settings.trade,phone:D.settings.phone,
-    email:D.settings.email,adresse:D.settings.adresse,siret:D.settings.siret,logo:D.settings.logo,
+    email:D.settings.email,adresse:D.settings.adresse,siret:D.settings.siret,
+    tva_num:D.settings.tva_num||'',logo:D.settings.logo,
     tva:D.settings.tva,teams:D.settings.teams,categories:D.settings.categories,
     accent_color:D.settings.accent_color,metrics:D.settings.metrics
   };
@@ -414,6 +419,18 @@ function obNext(n){
   OB.step=n;$('step-'+OB.step).classList.add('active');$('dot-'+OB.step).classList.add('active');
   if(n===1)obRenderMetrics();
   if(n===2){obRenderTeams();obRenderCats();}
+}
+function obSkip(){
+  // Paramètres minimaux : juste le nom si renseigné
+  const company=$('ob-company')?.value.trim();
+  if(company){D.settings.company=company;$('sidebar-company').textContent=company;}
+  $('onboarding').style.display='none';
+  applyAccent();
+  $('app').classList.add('visible');
+  go('settings'); // Redirect vers paramètres pour compléter plus tard
+  toast('Complétez vos paramètres dans ⚙️ Paramètres','error');
+  // Sauvegarde silencieuse des settings de base
+  if(company)saveSetting();
 }
 async function obFinish(){
   const btn=$('ob-finish');
@@ -458,7 +475,7 @@ function pgDashboard(){
   const mr=ca>0?Math.round(marge/ca*100):0;
   const alertes=st.filter(s=>+s.qte<=(+s.seuil||0));
   const alertH=alertes.length?alertes.map(s=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="width:10px;height:10px;border-radius:50%;background:${+s.qte===0?'var(--danger)':'var(--warning)'};flex-shrink:0"></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">${s.libelle}</div><div class="text-sm text-muted">${s.qte} ${s.unite||''} (seuil: ${s.seuil})</div></div><span class="badge ${+s.qte===0?'badge-red':'badge-orange'}">${+s.qte===0?'Rupture':'Bas'}</span></div>`).join(''):`<div class="alert alert-success"><span>✅</span>Tous les stocks sont corrects.</div>`;
-  const recentH=ch.slice(0,5).length?`<div class="table-wrapper"><table><thead><tr><th>Réf. Chantier</th><th>Client / Adresse</th><th>État</th><th>Devis</th><th>Marge</th></tr></thead><tbody>${ch.slice(0,5).map(c=>`<tr style="cursor:pointer" onclick="go('chantiers')"><td><strong>${c.nom}</strong></td><td class="td-muted">${c.client||'—'}</td><td>${etatB(c.etat)}</td><td class="td-mono">${eur(c.devis)}</td><td class="td-mono" style="color:${+c.marge>=0?'var(--success)':'var(--danger)'};font-weight:700">${eur(c.marge)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty-state"><div class="empty-icon">🚧</div><div class="empty-title">Aucun chantier</div><button class="btn btn-primary btn-sm" onclick="go('chantiers')">Créer un chantier</button></div>`;
+  const recentH=ch.slice(0,5).length?`<div class="table-wrapper"><table><thead><tr><th>Chantier</th><th>Client</th><th>État</th><th>Devis</th><th>Marge</th><th></th></tr></thead><tbody>${ch.slice(0,5).map(c=>`<tr><td><strong>${c.nom}</strong></td><td class="td-muted">${c.client||'—'}</td><td>${etatB(c.etat)}</td><td class="td-mono">${eur(c.devis)}</td><td class="td-mono" style="color:${+c.marge>=0?'var(--success)':'var(--danger)'};font-weight:700">${eur(c.marge)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="openFicheChantier('${c.id}')">👁️</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty-state"><div class="empty-icon">🚧</div><div class="empty-title">Aucun chantier</div><button class="btn btn-primary btn-sm" onclick="go('chantiers')">Créer un chantier</button></div>`;
   setContent(`<div class="kpi-grid"><div class="kpi-card"><div class="kpi-icon">🚧</div><div class="kpi-label">En cours</div><div class="kpi-value">${enCours}</div><div class="kpi-sub">${ch.length} total</div></div><div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-label">Terminés</div><div class="kpi-value">${termines}</div></div><div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:20px">${eur(ca)}</div></div><div class="kpi-card ${mr>=20?'green':mr>=10?'orange':'red'}"><div class="kpi-icon">📊</div><div class="kpi-label">Marge brute</div><div class="kpi-value" style="font-size:20px">${eur(marge)}</div><div class="kpi-sub">${mr}% du CA</div></div><div class="kpi-card orange"><div class="kpi-icon">📦</div><div class="kpi-label">Valeur Stock</div><div class="kpi-value" style="font-size:20px">${eur(valStock)}</div></div></div><div class="grid-2" style="gap:20px;align-items:start"><div class="card"><div class="card-title">Chantiers récents</div>${recentH}</div><div class="card"><div class="card-title">⚠️ Alertes Stock (${alertes.length})</div>${alertH}</div></div>`);
 }
 
@@ -470,7 +487,7 @@ function pgChantiers(){
   if(fE)ch=ch.filter(c=>c.etat===fE);if(fQ)ch=ch.filter(c=>c.equipe===fQ);
   if(fS)ch=ch.filter(c=>c.nom?.toLowerCase().includes(fS)||c.client?.toLowerCase().includes(fS));
   const metrics=(D.settings.metrics||[]).filter(m=>m.label?.trim());
-  const tbody=ch.length?ch.map(c=>{const r=+c.devis>0?Math.round(+c.marge/+c.devis*100):0;const md=metrics.length&&c.metrics?metrics.map((m,i)=>`${m.label}:${c.metrics[i]??0}${m.unit?' '+m.unit:''}`).join(' · '):'';return`<tr><td><strong style="cursor:pointer" onclick="modalChantier('${c.id}')">${c.nom}</strong><br><span class="td-muted">${c.client||'—'}</span>${md?`<br><span class="td-muted text-sm">${md}</span>`:''}</td><td>${etatB(c.etat)}</td><td class="td-muted">${c.equipe||'—'}</td><td class="td-muted" style="font-size:12px">${fdate(c.date_debut)} → ${fdate(c.date_fin)}</td><td class="td-mono">${eur(c.devis)}</td><td class="td-mono" style="color:${r>=15?'var(--success)':r>=5?'var(--warning)':'var(--danger)'};font-weight:700">${eur(c.marge)}<br><span style="font-size:10px">${r}%</span></td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="modalChantier('${c.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="openChantierDocs('${c.id}')">📎</button><button class="btn btn-ghost btn-icon btn-sm" onclick="delChantier('${c.id}')">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🚧</div><div class="empty-title">Aucun chantier</div></div></td></tr>`;
+  const tbody=ch.length?ch.map(c=>{const r=+c.devis>0?Math.round(+c.marge/+c.devis*100):0;const md=metrics.length&&c.metrics?metrics.map((m,i)=>`${m.label}:${c.metrics[i]??0}${m.unit?' '+m.unit:''}`).join(' · '):'';return`<tr><td><strong style="cursor:pointer" onclick="modalChantier('${c.id}')">${c.nom}</strong><br><span class="td-muted">${c.client||'—'}</span>${md?`<br><span class="td-muted text-sm">${md}</span>`:''}</td><td>${etatB(c.etat)}</td><td class="td-muted">${c.equipe||'—'}</td><td class="td-muted" style="font-size:12px">${fdate(c.date_debut)} → ${fdate(c.date_fin)}</td><td class="td-mono">${eur(c.devis)}</td><td class="td-mono" style="color:${r>=15?'var(--success)':r>=5?'var(--warning)':'var(--danger)'};font-weight:700">${eur(c.marge)}<br><span style="font-size:10px">${r}%</span></td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="openFicheChantier('${c.id}')" title="Fiche complète">👁️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="modalChantier('${c.id}')" title="Modifier">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="delChantier('${c.id}')">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🚧</div><div class="empty-title">Aucun chantier</div></div></td></tr>`;
   const equipeOpts=['Non assigné'].concat(D.settings.teams).map(t=>`<option>${t}</option>`).join('');
   setContent(`<div class="page-header"><div class="page-title">Chantiers (${D.chantiers.length})</div></div><div class="flex gap-3 mb-6" style="flex-wrap:wrap"><select id="f-etat" onchange="pgChantiers()" style="width:auto;min-width:140px"><option value="">Tous états</option><option>Devis</option><option>En cours</option><option>En pause</option><option>Terminé</option><option>Annulé</option></select><select id="f-equipe" onchange="pgChantiers()" style="width:auto;min-width:160px"><option value="">Toutes équipes</option>${equipeOpts}</select><input id="f-search" type="search" placeholder="🔍 Rechercher..." onkeyup="pgChantiers()" style="width:auto;min-width:200px"></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table><thead><tr><th>Chantier / Client</th><th>État</th><th>Équipe</th><th>Dates</th><th>Devis TTC</th><th>Marge</th><th></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
   if(fE){const e=$('f-etat');if(e)e.value=fE;}if(fQ){const e=$('f-equipe');if(e)e.value=fQ;}if(fS){const e=$('f-search');if(e)e.value=fS;}
@@ -503,6 +520,82 @@ function openChantierDocs(cid){
   const body=`<div style="margin-bottom:24px"><div class="flex items-center justify-between mb-4"><div style="font-family:var(--font-display);font-size:16px;font-weight:700">📋 Devis liés</div><button class="btn btn-primary btn-sm" onclick="closeModal();modalDevisCreate('${cid}')">+ Nouveau devis</button></div>${dvsH}</div><div><div class="flex items-center justify-between mb-4"><div style="font-family:var(--font-display);font-size:16px;font-weight:700">🧾 Factures d'achat</div><button class="btn btn-primary btn-sm" onclick="closeModal();modalFactureCreate('${cid}')">+ Ajouter facture</button></div>${facsH}</div>`;
   modal(`📎 Documents — ${c?.nom||''}`,body,'',true);
 }
+function openFicheChantier(cid){
+  const c=D.chantiers.find(x=>x.id===cid);if(!c)return;
+  const mats=D.materiaux.filter(m=>m.chantier_id===cid);
+  const dvs=D.devis_docs.filter(d=>d.chantier_id===cid);
+  const facs=D.factures.filter(f=>f.chantier_id===cid);
+  const dv=+c.devis||0,cm=+c.cout_mat||0,mg=dv-cm;
+  const facTotal=facs.reduce((a,f)=>a+(+f.montant||0),0);
+  const facPay=facs.filter(f=>f.payee).reduce((a,f)=>a+(+f.montant||0),0);
+  const mr=dv>0?Math.round(mg/dv*100):0;
+  const metrics=(D.settings.metrics||[]).filter(m=>m.label?.trim());
+  // KPIs
+  const kpis=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+    <div class="kpi-card"><div class="kpi-label">Devis TTC</div><div class="kpi-value" style="font-size:20px;color:var(--accent)">${eur(dv)}</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">Achats</div><div class="kpi-value" style="font-size:20px">${eur(facTotal)}</div><div class="kpi-sub">${eur(facPay)} payées</div></div>
+    <div class="kpi-card ${mr>=20?'green':mr>=10?'orange':'red'}"><div class="kpi-label">Marge brute</div><div class="kpi-value" style="font-size:20px">${eur(mg)}</div><div class="kpi-sub">${mr}% du CA</div></div>
+    <div class="kpi-card"><div class="kpi-label">Matériaux</div><div class="kpi-value" style="font-size:20px">${mats.length}</div><div class="kpi-sub">${eur(cm)} coût</div></div>
+  </div>`;
+  // Infos chantier
+  const metrH=metrics.length&&c.metrics?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px">${metrics.map((m,i)=>`<span class="badge badge-gray">${m.label} : <strong>${c.metrics[i]??0}</strong>${m.unit?' '+m.unit:''}</span>`).join('')}</div>`:'';
+  const infos=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    <div class="card" style="padding:14px 18px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px">Informations</div>
+      <div style="font-size:13px;line-height:2.1">
+        <span class="td-muted">Client</span><br><strong>${c.client||'—'}</strong><br>
+        <span class="td-muted">Équipe</span><br><strong>${c.equipe||'—'}</strong><br>
+        <span class="td-muted">Période</span><br><strong>${fdate(c.date_debut)} → ${fdate(c.date_fin)}</strong>
+        ${metrH}
+      </div>
+    </div>
+    <div class="card" style="padding:14px 18px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px">État & Notes</div>
+      <div style="margin-bottom:10px">${etatB(c.etat)}</div>
+      ${c.notes?`<div style="font-size:13px;color:var(--text-muted);white-space:pre-wrap">${c.notes}</div>`:'<div class="text-sm td-muted">Aucune note</div>'}
+    </div>
+  </div>`;
+  // Devis
+  const dvsH=dvs.length?dvs.map(d=>`<div class="doc-card">
+    <div class="flex items-center gap-3">
+      <span style="font-size:20px">📋</span>
+      <div><div style="font-weight:600">${d.numero} — ${eur(d.total_ttc)}</div>
+      <div class="text-sm text-muted">${fdate(d.date)} · ${etatDevisB(d.statut,d.id)}</div></div>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-secondary btn-sm" onclick="printDevis('${d.id}')">🖨️</button>
+    </div>
+  </div>`).join(''):`<div class="text-sm td-muted" style="padding:10px 0">Aucun devis · <a href="#" onclick="closeModal();modalDevisCreate('${cid}')" style="color:var(--accent)">+ Créer</a></div>`;
+  // Matériaux / Sorties stock
+  const matsH=mats.length?`<div class="table-wrapper"><table><thead><tr><th>Désignation</th><th>Qté</th><th>P.U.</th><th>Total</th><th>Statut</th></tr></thead><tbody>${
+    mats.map(m=>`<tr><td><strong>${m.designation}</strong>${m.ref?'<br><span class="td-muted text-sm">'+m.ref+'</span>':''}</td><td class="td-mono">${m.qte} ${m.unite||''}</td><td class="td-mono">${eur(m.prix_u)}</td><td class="td-mono font-bold">${eur(m.total)}</td><td>${statB(m.statut)}</td></tr>`).join('')
+  }</tbody></table></div>`:`<div class="text-sm td-muted" style="padding:10px 0">Aucun matériau · <a href="#" onclick="closeModal();go('appro')" style="color:var(--accent)">Aller à l'approvisionnement</a></div>`;
+  // Factures
+  const facsH=facs.length?facs.map(f=>`<div class="doc-card">
+    <div class="flex items-center gap-3">
+      <span style="font-size:20px">🧾</span>
+      <div><div style="font-weight:600">${f.fournisseur||'—'} — ${eur(f.montant)}</div>
+      <div class="text-sm text-muted">${fdate(f.date)} · ${f.categorie} · <span class="badge ${f.payee?'badge-green':'badge-orange'}">${f.payee?'Payée':'En attente'}</span></div></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="togglePaiement('${f.id}',${!f.payee},'${cid}')" title="${f.payee?'Marquer impayée':'Marquer payée'}">💳</button>
+  </div>`).join(''):`<div class="text-sm td-muted" style="padding:10px 0">Aucune facture · <a href="#" onclick="closeModal();modalFactureCreate('${cid}')" style="color:var(--accent)">+ Ajouter</a></div>`;
+
+  const body=kpis+infos
+    +`<div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">📋 Devis liés (${dvs.length})</div>`
+    +dvsH
+    +`<div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">🔩 Matériaux (${mats.length})</div>`
+    +matsH
+    +`<div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">🧾 Factures fournisseurs (${facs.length})</div>`
+    +facsH;
+  modal(`📂 ${c.nom}`,body,
+    `<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
+     <button class="btn btn-secondary" onclick="closeModal();modalDevisCreate('${cid}')">📋 Nouveau devis</button>
+     <button class="btn btn-secondary" onclick="closeModal();printBon('${cid}')">🖨️ Bon</button>
+     <button class="btn btn-secondary" onclick="closeModal();printFiche('${cid}')">📊 Fiche</button>
+     <button class="btn btn-primary" onclick="closeModal();modalChantier('${cid}')">✏️ Modifier</button>`,
+    'modal-lg'
+  );
+}
 async function togglePaiement(fid,payee,cid){
   const f=D.factures.find(x=>x.id===fid);if(!f)return;
   f.payee=payee;
@@ -514,15 +607,45 @@ async function togglePaiement(fid,payee,cid){
 // ── DEVIS ─────────────────────────────────────────
 let devisLines=[];
 function pgDevis(){
-  $('t-pri').style.display='inline-flex';$('t-pri').textContent='+ Nouveau devis';$('t-pri').onclick=()=>modalDevisCreate(null);
-  const sortF=$('dv-sort')?.value||'date';
-  let dvs=[...D.devis_docs];
-  if(sortF==='montant')dvs.sort((a,b)=>+b.total_ttc-+a.total_ttc);
-  else dvs.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const ca=dvs.reduce((a,d)=>a+(+d.total_ttc||0),0);
-  const byStatut={Brouillon:dvs.filter(d=>d.statut==='Brouillon').length,Envoyé:dvs.filter(d=>d.statut==='Envoyé').length,Accepté:dvs.filter(d=>d.statut==='Accepté').length,Refusé:dvs.filter(d=>d.statut==='Refusé').length};
-  const tbody=dvs.length?dvs.map(d=>{const ch=D.chantiers.find(c=>c.id===d.chantier_id);return`<tr><td><strong>${d.numero||'—'}</strong></td><td class="td-muted">${d.ref_chantier||ch?.nom||'—'}</td><td><strong style="font-size:13px">${d.client||ch?.client||'—'}</strong>${d.client_adresse?'<br><span class="td-muted text-sm">'+d.client_adresse+(d.client_ville?' · '+d.client_ville:'')+'</span>':''}</td><td class="td-muted">${fdate(d.date)}</td><td class="td-mono">${eur(d.total_ht)}</td><td class="td-mono" style="font-weight:700">${eur(d.total_ttc)}</td><td>${etatDevisB(d.statut,d.id)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="printDevis('${d.id}')">🖨️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="del('devis_docs','${d.id}');D.devis_docs=D.devis_docs.filter(x=>x.id!=='${d.id}');pgDevis()">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucun devis</div></div></td></tr>`;
-  setContent(`<div class="page-header"><div class="page-title">Devis (${dvs.length})</div></div><div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Brouillons</div><div class="kpi-value">${byStatut.Brouillon}</div></div><div class="kpi-card"><div class="kpi-label">Envoyés</div><div class="kpi-value" style="color:var(--accent)">${byStatut.Envoyé}</div></div><div class="kpi-card green"><div class="kpi-label">Acceptés</div><div class="kpi-value">${byStatut.Accepté}</div></div><div class="kpi-card red"><div class="kpi-label">Refusés</div><div class="kpi-value">${byStatut.Refusé}</div></div></div><div class="flex gap-3 mb-4"><select id="dv-sort" onchange="pgDevis()" style="width:auto"><option value="date">Trier par date</option><option value="montant">Trier par montant</option></select></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table><thead><tr><th>N° Devis</th><th>Réf. Chantier</th><th>Client / Adresse</th><th>Date</th><th>HT</th><th>TTC</th><th>Statut <span style="font-size:10px;opacity:0.6">cliquer</span></th><th></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
+  $('t-pri').style.display='inline-flex';$('t-pri').textContent='+ Nouveau devis';$('t-pri').onclick=function(){modalDevisCreate(null);};
+  var sortF=($('dv-sort')||{value:'date'}).value;
+  var dvs=D.devis_docs.slice();
+  if(sortF==='montant')dvs.sort(function(a,b){return +b.total_ttc-+a.total_ttc;});
+  else dvs.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  var byS={Brouillon:0,Envoyé:0,Accepté:0,Refusé:0};
+  dvs.forEach(function(d){if(byS[d.statut]!==undefined)byS[d.statut]++;});
+  var tbody=dvs.length?dvs.map(function(d){
+    var ch=D.chantiers.find(function(c){return c.id===d.chantier_id;});
+    var ref=d.ref_chantier||ch?.nom||'';
+    var refH=ref?('<strong>'+ref+'</strong>'+(ch?'<br><span class="btn-fiche-ch" data-cid="'+ch.id+'" style="cursor:pointer;font-size:11px;color:var(--accent)">👁️ Fiche</span>':'')):'<span class="td-muted">—</span>';
+    var clientH='<strong>'+(d.client||ch?.client||'—')+'</strong>'+(d.client_adresse?'<br><span class="td-muted text-sm">'+d.client_adresse+(d.client_ville?' · '+d.client_ville:'')+'</span>':'');
+    var chBtn=d.chantier_id?'':'<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px" data-dv-create="'+d.id+'" title="Créer chantier">+🚧</button>';
+    var printBtn='<button class="btn btn-ghost btn-icon btn-sm" data-dv-print="'+d.id+'" title="Imprimer">🖨️</button>';
+    var delBtn='<button class="btn btn-ghost btn-icon btn-sm" data-dv-del="'+d.id+'" title="Supprimer">🗑️</button>';
+    return'<tr><td><strong>'+(d.numero||'—')+'</strong></td><td>'+refH+'</td><td>'+clientH+'</td><td class="td-muted">'+fdate(d.date)+'</td><td class="td-mono">'+eur(d.total_ht)+'</td><td class="td-mono" style="font-weight:700">'+eur(d.total_ttc)+'</td><td>'+etatDevisB(d.statut,d.id)+'</td><td style="white-space:nowrap">'+printBtn+chBtn+delBtn+'</td></tr>';
+  }).join(''):'<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucun devis</div></div></td></tr>';
+  setContent('<div class="page-header"><div class="page-title">Devis ('+dvs.length+')</div></div>'
+    +'<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">'
+    +'<div class="kpi-card"><div class="kpi-label">Brouillons</div><div class="kpi-value">'+byS.Brouillon+'</div></div>'
+    +'<div class="kpi-card"><div class="kpi-label">Envoyés</div><div class="kpi-value" style="color:var(--accent)">'+byS.Envoyé+'</div></div>'
+    +'<div class="kpi-card green"><div class="kpi-label">Acceptés</div><div class="kpi-value">'+byS.Accepté+'</div></div>'
+    +'<div class="kpi-card red"><div class="kpi-label">Refusés</div><div class="kpi-value">'+byS.Refusé+'</div></div>'
+    +'</div>'
+    +'<div class="flex gap-3 mb-4"><select id="dv-sort" onchange="pgDevis()" style="width:auto"><option value="date">Trier par date</option><option value="montant">Trier par montant</option></select></div>'
+    +'<div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)">'
+    +'<table><thead><tr><th>N° Devis</th><th>Réf. Chantier</th><th>Client</th><th>Date</th><th>HT</th><th>TTC</th><th>Statut <span style="font-size:10px;opacity:0.6">↩ changer</span></th><th></th></tr></thead>'
+    +'<tbody>'+tbody+'</tbody></table></div></div>'
+  );
+  if(sortF==='montant'&&$('dv-sort'))$('dv-sort').value='montant';
+  // Event delegation pour éviter les onclick imbriqués
+  var tbl=document.querySelector('#content .table-wrapper');
+  if(tbl)tbl.addEventListener('click',function(e){
+    var el=e.target;
+    if(el.dataset.dvPrint)printDevis(el.dataset.dvPrint);
+    else if(el.dataset.dvCreate)createChantierFromDevis(el.dataset.dvCreate);
+    else if(el.dataset.dvDel){if(confirm('Supprimer ce devis ?')){D.devis_docs=D.devis_docs.filter(function(x){return x.id!==el.dataset.dvDel;});del('devis_docs',el.dataset.dvDel);pgDevis();}}
+    else if(el.classList.contains('btn-fiche-ch'))openFicheChantier(el.dataset.cid);
+  });
 }
 async function cycleDevisStatut(dvId){
   const d=D.devis_docs.find(x=>x.id===dvId);if(!d)return;
@@ -531,7 +654,56 @@ async function cycleDevisStatut(dvId){
   d.statut=next;
   await SB.from('devis_docs').update({statut:next}).eq('id',dvId).eq('user_id',USER.id);
   toast('Statut → '+next);
+  // Quand un devis passe en Accepté → proposer de créer un chantier
+  if(next==='Accepté'){
+    const alreadyLinked=d.chantier_id&&D.chantiers.find(c=>c.id===d.chantier_id);
+    if(!alreadyLinked){
+      setTimeout(()=>proposerChantierFromDevis(dvId),400);
+    }
+  }
   if(D.page==='devis')pgDevis();
+  else if(D.page==='chantiers')pgChantiers();
+}
+function proposerChantierFromDevis(dvId){
+  const d=D.devis_docs.find(x=>x.id===dvId);if(!d)return;
+  const body=`<div class="alert alert-success mb-4"><span>✅</span><strong>Devis ${d.numero} accepté !</strong></div>
+  <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px">Souhaitez-vous créer un chantier à partir de ce devis ? Le client, le montant et les informations seront pré-remplis.</p>
+  <div class="card" style="margin-bottom:0;background:var(--bg)">
+    <div style="font-size:13px"><strong>${d.client||'—'}</strong>${d.ref_chantier?' · '+d.ref_chantier:''}<br><span class="td-muted">${eur(d.total_ttc)} TTC</span></div>
+  </div>`;
+  modal('🚀 Créer un chantier ?',body,
+    `<button class="btn btn-secondary" onclick="closeModal()">Non merci</button>
+     <button class="btn btn-primary" onclick="closeModal();createChantierFromDevis('${dvId}')">✅ Créer le chantier</button>`
+  );
+}
+async function createChantierFromDevis(dvId){
+  const d=D.devis_docs.find(x=>x.id===dvId);if(!d)return;
+  const data={
+    id:uid(),
+    nom:d.ref_chantier||d.client||'Chantier '+d.numero,
+    client:d.client||'',
+    etat:'En cours',
+    equipe:'Non assigné',
+    devis:d.total_ttc||0,
+    date_debut:today(),
+    date_fin:'',
+    notes:'Créé depuis devis '+d.numero,
+    metrics:[],
+    cout_mat:0,
+    marge:d.total_ttc||0
+  };
+  D.chantiers.unshift(data);
+  // Lier le devis au chantier
+  d.chantier_id=data.id;
+  await SB.from('devis_docs').update({chantier_id:data.id}).eq('id',dvId).eq('user_id',USER.id);
+  // Créer le client si pas encore dans la base
+  if(d.client&&!D.clients.find(c=>c.nom===d.client)){
+    const nc={id:uid(),nom:d.client,email:'',tel:'',adresse:(d.client_adresse||(d.client_ville?d.client_adresse+', '+d.client_ville:''))||''};
+    D.clients.push(nc);await insert('clients',nc);
+  }
+  const saved=await insert('chantiers',data);
+  if(saved){D.chantiers[0]=saved;toast('Chantier créé ! 🎉');}
+  go('chantiers');
 }
 function modalDevisCreate(chantierId){
   devisLines=[];
@@ -622,7 +794,17 @@ async function saveDevis(doClose=true){
   };
   if(doClose)closeModal();
   const saved=await insert('devis_docs',data);
-  if(saved){D.devis_docs.unshift(saved);toast('Devis sauvegardé !');}
+  if(saved){
+    D.devis_docs.unshift(saved);
+    toast('Devis sauvegardé !');
+    // Auto-créer le client s'il n'existe pas encore
+    if(data.client&&!D.clients.find(c=>c.nom===data.client)){
+      const addr=data.client_adresse?data.client_adresse+(data.client_ville?', '+data.client_ville:''):'';
+      const nc={id:uid(),nom:data.client,email:'',tel:'',adresse:addr,notes:''};
+      D.clients.push(nc);
+      insert('clients',nc);
+    }
+  }
   devisLines=[];
   return saved;
 }
@@ -720,12 +902,38 @@ function pgClients(){
   if(sortBy){const e=$('cl-sort');if(e)e.value=sortBy;}
 }
 function detailClient(id){
-  const cl=D.clients.find(x=>x.id===id);if(!cl)return;
-  const ch=D.chantiers.filter(c=>c.client===cl.nom);
-  const ca=ch.reduce((a,c)=>a+(+c.devis||0),0),mg=ch.reduce((a,c)=>a+(+c.marge||0),0);
-  const chH=ch.length?`<div class="table-wrapper" style="border:none"><table><thead><tr><th>Chantier</th><th>État</th><th>Devis</th><th>Marge</th></tr></thead><tbody>${ch.map(c=>`<tr><td><strong>${c.nom}</strong></td><td>${etatB(c.etat)}</td><td class="td-mono">${eur(c.devis)}</td><td class="td-mono" style="color:${+c.marge>=0?'var(--success)':'var(--danger)'}">${eur(c.marge)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="text-muted text-sm" style="padding:12px 0">Aucun chantier</div>`;
-  const body=`<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:18px">${eur(ca)}</div></div><div class="kpi-card"><div class="kpi-label">Marge</div><div class="kpi-value" style="font-size:18px">${eur(mg)}</div></div><div class="kpi-card"><div class="kpi-label">Chantiers</div><div class="kpi-value">${ch.length}</div></div></div><div style="margin-bottom:16px"><div class="text-muted text-sm" style="margin-bottom:4px">Coordonnées</div><div>${cl.email||'—'} · ${cl.tel||'—'}</div><div class="text-muted text-sm">${cl.adresse||''}</div></div><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:10px">Chantiers liés</div>${chH}`;
-  modal(`👤 ${cl.nom}`,body,`<button class="btn btn-secondary" onclick="closeModal()">Fermer</button><button class="btn btn-primary" onclick="closeModal();modalClient('${id}')">✏️ Modifier</button>`);
+  var cl=D.clients.find(function(x){return x.id===id;});if(!cl)return;
+  var ch=D.chantiers.filter(function(c){return c.client===cl.nom;});
+  // Devis liés : par chantier OU directement par nom client
+  var dvs=D.devis_docs.filter(function(d){
+    if(d.client===cl.nom)return true;
+    if(d.chantier_id&&ch.find(function(c){return c.id===d.chantier_id;}))return true;
+    return false;
+  });
+  var ca=ch.reduce(function(a,c){return a+(+c.devis||0);},0);
+  var marge=ch.reduce(function(a,c){return a+(+c.marge||0);},0);
+  var mr=ca>0?Math.round(marge/ca*100):0;
+  var dvCA=dvs.reduce(function(a,d){return a+(+d.total_ttc||0);},0);
+  var chH=ch.length?'<div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>Nom</th><th>État</th><th>Devis</th><th>Marge</th><th></th></tr></thead><tbody>'+ch.map(function(c){return'<tr><td><strong>'+c.nom+'</strong></td><td>'+etatB(c.etat)+'</td><td class="td-mono">'+eur(c.devis)+'</td><td class="td-mono" style="color:'+(+c.marge>=0?'var(--success)':'var(--danger)')+'">'+eur(c.marge)+'</td><td><button class="btn btn-ghost btn-sm" onclick="closeModal();openFicheChantier(\''+c.id+'\')">👁️</button></td></tr>';}).join('')+'</tbody></table></div>':'<div class="text-sm td-muted" style="padding:10px 0">Aucun chantier</div>';
+  var dvsH=dvs.length?dvs.map(function(d){return'<div class="doc-card"><div><div style="font-weight:600">'+d.numero+' — '+eur(d.total_ttc)+'</div><div class="text-sm text-muted">'+fdate(d.date)+' · '+etatDevisB(d.statut,d.id)+(d.ref_chantier?' · '+d.ref_chantier:'')+'</div></div><button class="btn btn-ghost btn-sm" onclick="printDevis(\''+d.id+'\')">🖨️</button></div>';}).join(''):'<div class="text-sm td-muted" style="padding:10px 0">Aucun devis</div>';
+  var body='<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">'
+    +'<div class="kpi-card"><div class="kpi-label">Chantiers</div><div class="kpi-value">'+ch.length+'</div></div>'
+    +'<div class="kpi-card orange"><div class="kpi-label">Devis émis</div><div class="kpi-value" style="font-size:18px">'+eur(dvCA)+'</div></div>'
+    +'<div class="kpi-card '+(mr>=20?'green':mr>=5?'orange':'red')+'"><div class="kpi-label">Marge</div><div class="kpi-value" style="font-size:18px">'+eur(marge)+'</div><div class="kpi-sub">'+mr+'%</div></div>'
+    +'</div>'
+    +'<div style="font-size:12px;line-height:2;color:var(--text-muted);margin-bottom:16px">'
+    +(cl.tel?'📞 '+cl.tel+'<br>':'')+(cl.email?'📧 '+cl.email+'<br>':'')+(cl.adresse?'📍 '+cl.adresse:'')
+    +'</div>'
+    +'<div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">🚧 Chantiers ('+ch.length+')</div>'
+    +chH
+    +'<div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">📋 Devis ('+dvs.length+')</div>'
+    +dvsH;
+  modal('👤 '+cl.nom,body,
+    '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>'
+    +'<button class="btn btn-secondary" onclick="closeModal();modalDevisCreate(null)">📋 Nouveau devis</button>'
+    +'<button class="btn btn-primary" onclick="closeModal();modalClient(\''+id+'\')">✏️ Modifier</button>',
+    'modal-lg'
+  );
 }
 function modalClient(id=null){const cl=id?D.clients.find(x=>x.id===id):null;const body=`<div class="form-row form-row-2"><div class="form-group"><label>Nom *</label><input id="cl-nom" value="${cl?.nom||''}"></div><div class="form-group"><label>Email</label><input id="cl-email" type="email" value="${cl?.email||''}"></div></div><div class="form-row form-row-2"><div class="form-group"><label>Téléphone</label><input id="cl-tel" type="tel" value="${cl?.tel||''}"></div><div class="form-group"><label>Adresse</label><input id="cl-adr" value="${cl?.adresse||''}"></div></div><div class="form-group"><label>Notes</label><textarea id="cl-notes">${cl?.notes||''}</textarea></div>`;modal(id?'Modifier':'Nouveau client',body,`<button class="btn btn-secondary" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveClient('${id||''}')">💾 Enregistrer</button>`);}
 async function saveClient(id){const nom=$('cl-nom').value.trim();if(!nom){toast('Nom obligatoire','error');return;}const data={id:id||uid(),nom,email:$('cl-email').value.trim(),tel:$('cl-tel').value.trim(),adresse:$('cl-adr').value.trim(),notes:$('cl-notes').value.trim()};closeModal();if(id){const idx=D.clients.findIndex(c=>c.id===id);if(idx>=0)D.clients[idx]=data;}else D.clients.push(data);await upsert('clients',data);toast(id?'Mis à jour !':'Client ajouté !');pgClients();}
@@ -1007,7 +1215,15 @@ async function startApp(user){
   $('auth-screen').style.display='none';
   $('onboarding').style.display='none';
   loader('Chargement de vos données...');
-  await loadAll();
+  try{
+    await loadAll();
+  }catch(e){
+    _appLoaded=false;  // Reset pour permettre une nouvelle tentative
+    hideLoader();
+    $('auth-screen').style.display='flex';
+    authMsg('Erreur de connexion. Vérifiez votre réseau et réessayez.','error');
+    console.error('startApp error:',e);
+  }
 }
 
 // Vérifier session existante au démarrage (localStorage)
