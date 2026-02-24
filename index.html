@@ -266,7 +266,10 @@ tbody td{padding:11px 14px;font-size:13.5px;vertical-align:middle;}
 </div>
 
 <script>
-const SB=supabase.createClient('https://zewyecoxpmycqdziuqzc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpld3llY294cG15Y3Fkeml1cXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjAzNzIsImV4cCI6MjA4NzQzNjM3Mn0._HNh6Oh8q1jK15geQZ18dMGd7QI8Ql-tP0wxXim6g-I');
+const SB=supabase.createClient('https://zewyecoxpmycqdziuqzc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpld3llY294cG15Y3Fkeml1cXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjAzNzIsImV4cCI6MjA4NzQzNjM3Mn0._HNh6Oh8q1jK15geQZ18dMGd7QI8Ql-tP0wxXim6g-I',{
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false},
+  global:{fetch:(url,opts={})=>{const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),15000);return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(tid));}}
+});
 let USER=null;
 const DM=[{label:'',unit:''},{label:'',unit:''},{label:'',unit:''}];
 let D={settings:{company:'',trade:'',phone:'',email:'',adresse:'',siret:'',logo:'',tva:20,teams:[],categories:['Matériaux','Consommable','Outillage'],accent_color:'#C0622A',metrics:JSON.parse(JSON.stringify(DM))},chantiers:[],stocks:[],materiaux:[],clients:[],mouvements:[],devis_docs:[],factures:[],page:'dashboard'};
@@ -879,27 +882,32 @@ function printFiche(cid){
 }
 
 // ── BOOT ──────────────────────────────────────────
-let _bootDone=false;
-function _bootDone_set(){_bootDone=true;}
+let _appLoaded=false;
 
-// Timeout de sécurité : si Supabase ne répond pas en 6s, afficher l'écran de connexion
+async function startApp(user){
+  if(_appLoaded)return; // Empêcher le double déclenchement
+  _appLoaded=true;
+  USER=user;
+  $('auth-screen').style.display='none';
+  $('onboarding').style.display='none';
+  await loadAll();
+}
+
+// Timeout de sécurité : 8s max pour le loader
 setTimeout(()=>{
-  if(!_bootDone){
-    console.warn('BatiPilot: timeout auth - affichage écran connexion');
+  if($('loader').style.display!=='none'){
+    console.warn('Timeout boot - affichage connexion');
     hideLoader();
     $('auth-screen').style.display='flex';
   }
-},6000);
+},8000);
 
 SB.auth.onAuthStateChange(async(event,session)=>{
-  console.log('Auth event:',event,'user:',session?.user?.email||'none');
-  _bootDone_set();
+  console.log('Auth:',event, session?.user?.email||'none');
   if(session?.user){
-    USER=session.user;
-    $('auth-screen').style.display='none';
-    $('onboarding').style.display='none';
-    await loadAll();
-  }else{
+    await startApp(session.user);
+  }else if(event==='SIGNED_OUT'){
+    _appLoaded=false;
     hideLoader();
     $('auth-screen').style.display='flex';
     $('app').classList.remove('visible');
@@ -907,16 +915,15 @@ SB.auth.onAuthStateChange(async(event,session)=>{
   }
 });
 
-// Vérification immédiate de la session existante (fallback)
+// Fallback immédiat via getSession
 (async()=>{
-  const {data:{session}}=await SB.auth.getSession();
-  if(session?.user&&!_bootDone){
-    console.log('Session récupérée via getSession()');
-    _bootDone_set();
-    USER=session.user;
-    $('auth-screen').style.display='none';
-    $('onboarding').style.display='none';
-    await loadAll();
+  try{
+    const {data:{session}}=await SB.auth.getSession();
+    if(session?.user)await startApp(session.user);
+    else{hideLoader();$('auth-screen').style.display='flex';}
+  }catch(e){
+    console.warn('getSession error:',e);
+    hideLoader();$('auth-screen').style.display='flex';
   }
 })();
 </script>
