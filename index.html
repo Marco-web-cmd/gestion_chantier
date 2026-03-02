@@ -211,22 +211,22 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 
 /* ════ CONDUCTEUR DE TRAVAUX ════ */
 /* Switcher de mode */
-#mode-switcher{position:fixed;top:14px;right:20px;z-index:600;display:none;}
+#mode-switcher{position:fixed;top:14px;right:20px;z-index:1000;display:none;}
 #mode-switcher.visible{display:flex;}
 .mode-pill{display:flex;background:var(--bg-sidebar);border-radius:30px;padding:4px;gap:2px;box-shadow:var(--shadow-md);}
 .mode-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:var(--font-body);color:rgba(255,255,255,0.45);background:transparent;transition:var(--transition);}
 .mode-btn.active{background:var(--accent);color:#fff;}
 /* Page conducteur */
 /* Desktop : conducteur s'intègre dans le layout existant */
-#conducteur-app{display:none;}
+#conducteur-app{display:none;transition:opacity 0.15s ease;}
 #conducteur-app.visible{display:flex;flex-direction:column;}
 @media(min-width:769px){
+  /* Sur desktop : le mobile-nav n'existe pas — toujours caché */
+  #mobile-nav{display:none!important;}
+  #mobile-nav.visible{display:none!important;}
+  /* Conducteur de travaux : overlay sur la zone content (sidebar reste visible) */
   #conducteur-app.visible{position:fixed;top:0;left:var(--sidebar-w);right:0;bottom:0;z-index:50;background:var(--bg);}
-  /* Sur desktop, la sidebar patronale reste visible à gauche */
   #ct-nav.visible{left:var(--sidebar-w)!important;}
-  /* Cacher la nav mobile bureau quand conducteur actif */
-  #conducteur-app.visible ~ #mobile-nav,
-  body.ct-mode #mobile-nav{display:none!important;}
 }
 @media(max-width:768px){
   #conducteur-app.visible{position:fixed;inset:0;z-index:100;}
@@ -586,7 +586,9 @@ function switchMode(mode) {
     navCT.classList.add('visible');
     btnPatron && btnPatron.classList.remove('active');
     btnCond   && btnCond.classList.add('active');
-    switcher && switcher.classList.remove('visible'); // caché en mode terrain
+    // Garder le switcher visible en mode conducteur pour pouvoir revenir
+    if(switcher){ switcher.classList.add('visible'); }
+    // Activer le bouton Terrain
     document.body.classList.add('ct-mode'); // classe utilitaire
     // Pré-sélectionner le premier chantier en cours
     if (!CT.chantierId) {
@@ -597,14 +599,17 @@ function switchMode(mode) {
     if($('ct-chantier-tag')){var _ch=D.chantiers.find(c=>c.id===CT.chantierId);$('ct-chantier-tag').textContent=_ch?_ch.nom:'';}
     ctGo(CT.page);
   } else {
-    appCT.classList.remove('visible');
-    appMain.classList.add('visible');
-    navCT.classList.remove('visible');
-    navMain && navMain.classList.add('visible');
-    if(navMain) navMain.style.display = ''; // restaurer
+    // Retour au bureau
+    if(appCT){ appCT.classList.remove('visible'); appCT.style.display=''; }
+    if(appMain){ appMain.classList.add('visible'); appMain.style.display=''; }
+    navCT && navCT.classList.remove('visible');
+    if(navMain){
+      navMain.classList.add('visible');
+      navMain.style.display = ''; // CSS desktop override via !important
+    }
     btnCond   && btnCond.classList.remove('active');
     btnPatron && btnPatron.classList.add('active');
-    switcher && switcher.classList.add('visible'); // remis visible
+    if(switcher){ switcher.classList.add('visible'); switcher.style.display=''; }
     document.body.classList.remove('ct-mode');
     go(D.page || 'dashboard');
   }
@@ -1638,10 +1643,10 @@ function launchApp(){
   initCommercial();
   $('sidebar-company').textContent=D.settings.company||'Mon Entreprise';
   $('app').classList.add('visible');
-  // Afficher nav mobile
+  // Afficher nav mobile (uniquement sur mobile — CSS masque sur desktop)
   const nav=$('mobile-nav');
-  if(nav)nav.classList.add('visible');
-  // Afficher le switcher Bureau/Terrain
+  if(nav)nav.classList.add('visible'); // CSS desktop: display:none!important override
+  // Afficher le switcher Bureau/Terrain (toujours visible sur desktop)
   const sw=$('mode-switcher');
   if(sw)sw.classList.add('visible');
   go('dashboard');
