@@ -334,9 +334,9 @@ tbody td{padding:11px 14px;font-size:13.5px;vertical-align:middle;}
 <body>
 <div id="offline-indicator"></div>
 <div id="offline-badge">🔴 Mode Hors-ligne — Lecture seule</div>
-<div id="loader" style="display:none"><div class="loader-logo">Bati<span>Pilot</span></div><div class="spinner"></div><div class="loader-text" id="loader-text">Chargement...</div></div>
+<div id="loader" style="display:flex"><div class="loader-logo">Bati<span>Pilot</span></div><div class="spinner"></div><div class="loader-text" id="loader-text">Vérification de la session...</div><div id="loader-retry" style="display:none;margin-top:20px"><button onclick="window.location.reload()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:10px 24px;border-radius:20px;font-size:13px;cursor:pointer;font-family:inherit">↺ Recharger la page</button><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;text-align:center">Si le problème persiste, vérifiez votre connexion</div></div></div>
 
-<div id="auth-screen" style="display:flex">
+<div id="auth-screen" style="display:none">
   <div class="auth-card">
     <div class="auth-logo">Bati<span>Pilot</span></div>
     <div class="auth-sub">Gestion de chantiers professionnelle</div>
@@ -1544,11 +1544,11 @@ async function loadAll(){
       sq(SB.from('bl_items').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}).limit(500)),
       sq(SB.from('ct_docs').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}))
     ]);
-    if(sr.error)// settings non trouvés → première connexion
-    if(cr.error)// chantiers non trouvés
-    if(dr.error)// table devis_docs absente
-    if(fr.error)// table factures absente
-    if(mvr.error)// table mouvements absente
+    if(sr.error){ /* settings absents → premier lancement */ }
+    if(cr.error){ D.chantiers=[]; }
+    if(dr.error){ D.devis_docs=[]; }
+    if(fr.error){ D.factures=[]; }
+    if(mvr.error){ D.mouvements=[]; }
     if(sr.data){
       D.settings={
         company:sr.data.company||'',trade:sr.data.trade||'',phone:sr.data.phone||'',email:sr.data.email||'',
@@ -1570,8 +1570,8 @@ async function loadAll(){
     D.notes_chantier=ncr.data||[];
     D.bl_items=blr.data||[];
     D.ct_docs=docr.data||[];
-    if(blr.error)// table bl_items absente
-    if(docr.error)// table ct_docs absente
+    if(blr.error){ D.bl_items=[]; } // table bl_items optionnelle
+    if(docr.error){ D.ct_docs=[]; } // table ct_docs optionnelle
     hideLoader();
     // Onboarding si premier démarrage (pas de settings, pas d'erreur réseau)
     // noSettings = connecté mais jamais configuré (premier lancement)
@@ -3135,38 +3135,72 @@ function ctPrintBLPro(fournisseur){
 
 
 // ══════════════════════════════════════════════════════════════════
-// BOOT — Session persistante + Auth state machine
+// ══════════════════════════════════════════════════════════════════
+// BOOT v12 — Machine à états robuste, sans race condition
 // ══════════════════════════════════════════════════════════════════
 let _appLoaded = false;
+let _bootDone  = false; // empêche le double-boot getSession + onAuthStateChange
+
+function showAuthScreen() {
+  hideLoader();
+  $('auth-screen').style.display = 'flex';
+  $('onboarding').style.display  = 'none';
+}
+// Afficher le bouton "Recharger" si le loader reste visible > 8s
+setTimeout(function() {
+  var loaderEl = document.getElementById('loader');
+  var retryBtn = document.getElementById('loader-retry');
+  if (loaderEl && loaderEl.style.display !== 'none' && retryBtn) {
+    retryBtn.style.display = 'block';
+  }
+}, 8000);
 
 async function startApp(user) {
+  // Guard strict : une seule tentative de boot à la fois
   if (_appLoaded) return;
   _appLoaded = true;
   USER = user;
   $('auth-screen').style.display = 'none';
   $('onboarding').style.display  = 'none';
   loader('Chargement de vos données...');
+
+  // Timeout global de sécurité : si tout plante, on montre l'écran de login
+  const bootTimeout = setTimeout(function() {
+    if (_appLoaded && document.getElementById('loader').style.display !== 'none') {
+      console.warn('[BatiPilot] Boot timeout — affichage auth screen');
+      _appLoaded = false;
+      showAuthScreen();
+      authMsg('Délai de connexion dépassé. Vérifiez votre réseau.', 'error');
+    }
+  }, 15000); // 15s max pour le boot complet
+
   try {
     await loadAll();
+    clearTimeout(bootTimeout);
   } catch(e) {
+    clearTimeout(bootTimeout);
     _appLoaded = false;
-    hideLoader();
-    $('auth-screen').style.display = 'flex';
+    showAuthScreen();
     authMsg('Erreur de connexion. Vérifiez votre réseau et réessayez.', 'error');
-    toast('Erreur de démarrage. Rechargez la page.','error');
   }
 }
 
-// 1. Au démarrage : restaurer la session existante depuis localStorage (instantané, pas de réseau)
+// ── Initialisation au démarrage de la page ──────────────────────
+// Stratégie : getSession() d'abord (cache local, instantané)
+// onAuthStateChange en backup si getSession échoue ou délai réseau
 (async () => {
   try {
-    const { data: { session } } = await SB.auth.getSession();
+    const { data: { session }, error } = await SB.auth.getSession();
+    _bootDone = true;
     if (session?.user) {
       await startApp(session.user);
+    } else {
+      // Pas de session → montrer l'écran de connexion
+      showAuthScreen();
     }
-    // Sinon auth-screen reste visible
   } catch(e) {
-    // session silencieuse
+    _bootDone = true;
+    showAuthScreen();
   }
 })();
 
@@ -3406,8 +3440,9 @@ function closeOnboarding() {
 
 // 2. Écouter les changements d'état auth (login, logout, refresh token, etc.)
 SB.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) {
-    await startApp(session.user);
+  if (event === 'SIGNED_IN' && session?.user) {
+    // Si getSession() a déjà géré le boot, ne pas redémarrer
+    if (!_appLoaded) await startApp(session.user);
   } else if (event === 'SIGNED_OUT') {
     _appLoaded = false;
     hideLoader();
