@@ -397,6 +397,10 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
   color: var(--text);
 }
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
+/* Mode-switcher inline dans topbar */
+#mode-switcher { display: none; align-items: center; }
+#mode-switcher.visible { display: flex; }
+
 
 /* ── Bottom nav mobile ──────────────────────────────────────────── */
 #mobile-nav {
@@ -491,7 +495,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 
 /* ════ CONDUCTEUR DE TRAVAUX ════ */
 /* Switcher de mode */
-#mode-switcher{position:fixed;top:12px;right:16px;z-index:1000;display:none;}
+#mode-switcher { display: none; }
 #mode-switcher.visible{display:flex;}
 .mode-pill{display:flex;background:rgba(20,22,26,0.95);border-radius:50px;padding:3px;gap:2px;box-shadow:0 4px 24px rgba(0,0,0,0.40);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.10);}
 .mode-btn{padding:7px 18px;border-radius:40px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:var(--font-body);color:rgba(255,255,255,0.42);background:transparent;transition:all 0.18s var(--ease-out);letter-spacing:0.2px;white-space:nowrap;}
@@ -582,7 +586,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 
 /* Mode conducteur : sidebar cachée, conducteur full-screen */
 body.ct-mode #sidebar { display: none !important; }
-body.ct-mode #mode-switcher { z-index: 1001; }
+body.ct-mode 
 </style>
 </head>
 <body>
@@ -695,6 +699,12 @@ body.ct-mode #mode-switcher { z-index: 1001; }
         <div class="topbar-title" id="topbar-title">Tableau de bord</div>
       </div>
       <div class="topbar-actions">
+        <div id="mode-switcher" style="display:none">
+          <div class="mode-pill">
+            <button class="mode-btn active" id="mode-patron" onclick="switchMode('patron')">🏢 Bureau</button>
+            <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">📋 Terrain</button>
+          </div>
+        </div>
         <span class="sync-dot" id="sync" style="display:none">⟳ Sync...</span>
         <button class="btn btn-secondary btn-sm" id="t-sec" style="display:none"></button>
         <button class="btn btn-primary btn-sm" id="t-pri" style="display:none"></button>
@@ -715,13 +725,7 @@ body.ct-mode #mode-switcher { z-index: 1001; }
 
 
 
-<!-- MODE SWITCHER -->
-<div id="mode-switcher">
-  <div class="mode-pill">
-    <button class="mode-btn active" id="mode-patron" onclick="switchMode('patron')">👷 Bureau</button>
-    <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">🦺 Terrain</button>
-  </div>
-</div>
+<!-- mode-switcher déplacé dans topbar -->
 
 <!-- APP CONDUCTEUR DE TRAVAUX -->
 <div id="conducteur-app">
@@ -5961,12 +5965,6 @@ function _dashQuickLink(page, ico, label, sub) {
 </script>
 
 
-<!-- MODE SWITCHER -->
-<div id="mode-switcher">
-  <div class="mode-pill">
-    <button class="mode-btn active" id="mode-patron" onclick="switchMode('patron')">👷 Bureau</button>
-    <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">🦺 Terrain</button>
-  </div>
 </div>
 
 <!-- APP CONDUCTEUR DE TRAVAUX -->
