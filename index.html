@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow"><!-- App privée -->
 <title>BatiPilot — Gestion de chantiers</title>
 <!-- PWA : Installable sur écran d'accueil -->
-<meta name="theme-color" content="#C0622A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22start_url%22%3A%20%22%2F%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image%2Fpng%22%7D%5D%0A%7D">
 <meta name="theme-color" content="#1C1E22">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -232,7 +232,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 .card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
 
 /* ── Topbar premium ─────────────────────────────────── */
-#topbar{height:58px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;gap:16px;position:sticky;top:0;z-index:9;backdrop-filter:blur(8px);background:rgba(253,252,250,0.92);}
+#topbar{height:58px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;gap:16px;position:sticky;top:0;z-index:9;background:var(--bg-card);}
 .topbar-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-0.3px;}
 #offline-indicator{display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--danger);color:#fff;font-size:12px;font-weight:600;padding:7px 16px;align-items:center;justify-content:center;gap:8px;animation:slideDown 0.3s ease;}
 #offline-badge{display:none;position:fixed;bottom:80px;left:16px;z-index:9000;background:rgba(0,0,0,0.75);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:20px;align-items:center;gap:6px;backdrop-filter:blur(4px);}
@@ -363,7 +363,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 /* ── Topbar ─────────────────────────────────────────────────────── */
 #topbar {
   height: var(--topbar-h);
-  background: rgba(253,252,250,0.92);
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -373,8 +373,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* backdrop-filter removed */
 }
 #topbar-menu-btn {
   display: none;
@@ -397,10 +396,6 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
   color: var(--text);
 }
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
-/* Mode-switcher inline dans topbar */
-#mode-switcher { display: none; align-items: center; }
-#mode-switcher.visible { display: flex; }
-
 
 /* ── Bottom nav mobile ──────────────────────────────────────────── */
 #mobile-nav {
@@ -495,7 +490,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 
 /* ════ CONDUCTEUR DE TRAVAUX ════ */
 /* Switcher de mode */
-#mode-switcher { display: none; }
+#mode-switcher{display:none;}
 #mode-switcher.visible{display:flex;}
 .mode-pill{display:flex;background:rgba(20,22,26,0.95);border-radius:50px;padding:3px;gap:2px;box-shadow:0 4px 24px rgba(0,0,0,0.40);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.10);}
 .mode-btn{padding:7px 18px;border-radius:40px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:var(--font-body);color:rgba(255,255,255,0.42);background:transparent;transition:all 0.18s var(--ease-out);letter-spacing:0.2px;white-space:nowrap;}
@@ -699,12 +694,6 @@ body.ct-mode
         <div class="topbar-title" id="topbar-title">Tableau de bord</div>
       </div>
       <div class="topbar-actions">
-        <div id="mode-switcher" style="display:none">
-          <div class="mode-pill">
-            <button class="mode-btn active" id="mode-patron" onclick="switchMode('patron')">🏢 Bureau</button>
-            <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">📋 Terrain</button>
-          </div>
-        </div>
         <span class="sync-dot" id="sync" style="display:none">⟳ Sync...</span>
         <button class="btn btn-secondary btn-sm" id="t-sec" style="display:none"></button>
         <button class="btn btn-primary btn-sm" id="t-pri" style="display:none"></button>
@@ -725,7 +714,7 @@ body.ct-mode
 
 
 
-<!-- mode-switcher déplacé dans topbar -->
+</div>
 
 <!-- APP CONDUCTEUR DE TRAVAUX -->
 <div id="conducteur-app">
@@ -769,7 +758,8 @@ body.ct-mode
   </button>
 </nav>
 
-<script>// ── BatiPilot v7 — Globals ──────────────────────────
+<script>
+// ── BatiPilot v7 — Globals ──────────────────────────
 var OFFLINE_DB_NAME = 'batipilot-offline';
 var OFFLINE_DB_VER  = 1;
 var _isOnline       = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -805,10 +795,7 @@ function modalEnvoiDevis(dvId){
     +'<div class="alert alert-warning">Rappel : joignez le devis en PDF &mdash; <strong>Apercu &rarr; Imprimer &rarr; Enregistrer en PDF</strong></div>';
   modal('Envoyer le devis par email',bodyHtml,'<button class="btn btn-secondary" onclick="closeModal()">Annuler</button><button class="btn btn-secondary" onclick="previewDevis(\"'+dvId+'\")">Apercu PDF</button><button class="btn btn-primary" onclick="openMailto()">Envoyer</button>');
 }
-function previewDevis(dvId){
-  const html=buildDevisHTML(dvId);if(!html)return;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();
-}
+
 function openMailto(){
   const email=($('env-email')||{value:''}).value.trim();
   const subject=encodeURIComponent(($('env-subject')||{value:''}).value);
@@ -1970,6 +1957,16 @@ async function saveSetting(){
 
 async function insert(table,row){showSync();try{const{data,error}=await SB.from(table).insert({...row,user_id:USER.id}).select().single();hideSync();if(error){toast('Erreur : '+error.message,'error');return null;}return data;}catch(e){hideSync();toast('Erreur réseau : '+e.message,'error');return null;}}
 async function del(table,id){showSync();try{const{error}=await SB.from(table).delete().eq('id',id).eq('user_id',USER.id);hideSync();if(error){toast('Erreur de suppression : '+error.message,'error');}}catch(e){hideSync();toast('Erreur réseau : '+e.message,'error');}}
+async function upsert(table,row){
+  showSync();
+  try {
+    const {error} = await SB.from(table).upsert({...row, user_id:USER.id});
+    hideSync();
+    if (error) { toast('Erreur sauvegarde : '+error.message, 'error'); return false; }
+    return true;
+  } catch(e) { hideSync(); toast('Erreur réseau : '+e.message, 'error'); return false; }
+}
+
 async function recalcChantier(cid){const c=D.chantiers.find(x=>x.id===cid);if(!c)return;const mats=D.materiaux.filter(m=>m.chantier_id===cid);c.cout_mat=mats.reduce((a,m)=>a+(+m.total||0),0);c.marge=(+c.devis||0)-c.cout_mat;try{await SB.from('chantiers').update({cout_mat:c.cout_mat,marge:c.marge}).eq('id',cid).eq('user_id',USER.id);}catch(e){toast('Erreur sync marge : '+e.message,'error');}}
 
 // ── ONBOARDING ────────────────────────────────────
@@ -2268,7 +2265,11 @@ async function saveChantier(id){
   data.marge=data.devis-data.cout_mat;closeModal();
   if(id){const idx=D.chantiers.findIndex(c=>c.id===id);if(idx>=0)D.chantiers[idx]=data;}
   else{D.chantiers.unshift(data);if(!D.clients.find(c=>c.nom===client)){const nc={id:uid(),nom:client,email:'',tel:'',adresse:'',notes:''};D.clients.push(nc);await insert('clients',nc);}}
-  await upsert('chantiers',data);toast(id?'Chantier mis à jour !':'Chantier créé !');pgChantiers();
+  const ok = await upsert('chantiers', data);
+  if (ok) {
+    toast(id ? 'Chantier mis à jour !' : 'Chantier créé !');
+    pgChantiers();
+  }
 }
 async function delChantier(id){
   const ch=D.chantiers.find(c=>c.id===id);if(!ch)return;
@@ -3727,8 +3728,8 @@ async function _execLoadDemo() {
 
     // — Clients démo
     const clients = [
-      { id: uid_demo(), user_id: uid_base, nom: 'Martin Dupont', email: 'martin.dupont@email.fr', telephone: '06 12 34 56 78', adresse: '12 rue des Lilas, 69001 Lyon', created_at: today_str },
-      { id: uid_demo(), user_id: uid_base, nom: 'SCI Bellevue', email: 'contact@sci-bellevue.fr', telephone: '04 78 90 12 34', adresse: '45 cours Gambetta, 69003 Lyon', created_at: today_str },
+      { id: uid_demo(), user_id: uid_base, nom: 'Martin Dupont', email: '<template class="__cf_email__" data-cfemail="7815190a0c1116561c0d0817160c381d15191114561e0a">[email&#160;protected]</template>', telephone: '06 12 34 56 78', adresse: '12 rue des Lilas, 69001 Lyon', created_at: today_str },
+      { id: uid_demo(), user_id: uid_base, nom: 'SCI Bellevue', email: '<template class="__cf_email__" data-cfemail="5a3935342e3b392e1a29393377383f36363f2c2f3f743c28">[email&#160;protected]</template>', telephone: '04 78 90 12 34', adresse: '45 cours Gambetta, 69003 Lyon', created_at: today_str },
     ];
     await SB.from('clients').insert(clients);
 
@@ -3846,23 +3847,6 @@ const STRIPE_LINKS = {
   team: 'https://buy.stripe.com/REMPLACER_LIEN_TEAM',
 };
 
-function openStripe(plan) {
-  const link = STRIPE_LINKS[plan];
-  if (!link || link.includes('REMPLACER')) {
-    modal('💳 Configuration requise',
-      '<div class="alert alert-warning"><span>⚠️</span>'
-      + '<div><strong>Stripe non configuré</strong><br>'
-      + 'Créez vos Payment Links sur <a href="https://dashboard.stripe.com/payment-links" target="_blank" style="color:var(--accent)">dashboard.stripe.com</a> '
-      + 'puis remplacez les URLs dans le code (variable STRIPE_LINKS).</div></div>',
-      '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>'
-    );
-    return;
-  }
-  // Pré-remplir l'email Stripe si possible
-  const url = new URL(link);
-  if (USER?.email) url.searchParams.set('prefilled_email', USER.email);
-  window.open(url.toString(), '_blank', 'noopener,noreferrer');
-}
 
 function openPortailStripe() {
   // Stripe Customer Portal — permettre à l'utilisateur de gérer/résilier son abonnement
@@ -3951,7 +3935,7 @@ async function _execSupprimerCompte() {
     toast('Compte supprimé. Au revoir !'); setTimeout(()=>location.reload(), 2000);
   } catch(e) {
     hideLoader();
-    toast('Erreur : ' + e.message + ' — Contactez support@batipilot.fr', 'error');
+    toast('Erreur : ' + e.message + ' — Contactez <template class="__cf_email__" data-cfemail="1b686e6b6b74696f5b797a6f726b7277746f357d69">[email&#160;protected]</template>', 'error');
   }
 }
 
@@ -4014,7 +3998,7 @@ function pgRGPD() {
         + '<strong>Hébergement :</strong> Supabase (EU – Francfort)<br>'
         + '<strong>Durée de conservation :</strong> Durée de l\'abonnement + 3 ans légaux<br>'
         + '<strong>Droits :</strong> Accès, rectification, effacement, portabilité<br>'
-        + '<strong>Contact DPO :</strong> <a href="mailto:dpo@batipilot.fr">dpo@batipilot.fr</a>'
+        + '<strong>Contact DPO :</strong> <a href="/cdn-cgi/l/email-protection#5034203f103231243920393c3f247e3622"><template class="__cf_email__" data-cfemail="5a3e2a351a383b2e332a3336352e743c28">[email&#160;protected]</template></a>'
       + '</div>'
     + '</div>'
 
@@ -5468,9 +5452,9 @@ function initCommercial() {
   renderPlanBadgeV9();
 
   // Patch modalMat : remplacer le bouton save par saveMatWithBudgetCheck
-  var _modalMatOriginal = window.modalMat;
+  var _modalMatOriginal = window.modalMat || modalMat;
   window.modalMat = function(chantierId) {
-    _modalMatOriginal(chantierId);
+    if (typeof _modalMatOriginal === 'function') _modalMatOriginal.call(window, chantierId);
     // Trouver le bouton save et le remplacer
     setTimeout(function() {
       var modalEl = document.querySelector('.modal-footer');
@@ -5485,9 +5469,9 @@ function initCommercial() {
   };
 
   // Patch event delegation chantiers : utiliser delChantierSafe
-  var _pgChantierOriginal = window.pgChantiers;
+  var _pgChantierOriginal = window.pgChantiers || pgChantiers;
   window.pgChantiers = function() {
-    _pgChantierOriginal();
+    if (typeof _pgChantierOriginal === 'function') _pgChantierOriginal.call(window);
     var tbl = document.querySelector('#content .table-wrapper');
     if (!tbl) return;
     // Ajouter un handler supplémentaire qui prend la priorité
@@ -5668,15 +5652,15 @@ function pgLegal() {
       + '<div style="font-size:13px;color:var(--text-muted);line-height:2">'
         + '<strong>Éditeur :</strong> [Votre société, forme juridique, capital, SIRET, adresse]<br>'
         + '<strong>Hébergement :</strong> Supabase Inc. / AWS EU-Central-1 (Francfort, Allemagne)<br>'
-        + '<strong>Contact :</strong> <a href="mailto:contact@batipilot.fr" style="color:var(--accent)">contact@batipilot.fr</a><br>'
-        + '<strong>DPO / RGPD :</strong> <a href="mailto:dpo@batipilot.fr" style="color:var(--accent)">dpo@batipilot.fr</a><br><br>'
+        + '<strong>Contact :</strong> <a href="/cdn-cgi/l/email-protection#64070b0a10050710240605100d140d080b104a0216" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="55363a3b21343621153734213c253c393a217b3327">[email&#160;protected]</span></a><br>'
+        + '<strong>DPO / RGPD :</strong> <a href="/cdn-cgi/l/email-protection#07637768476566736e776e6b6873296175" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="a1c5d1cee1c3c0d5c8d1c8cdced58fc7d3">[email&#160;protected]</span></a><br><br>'
         + '<strong>Propriété intellectuelle :</strong> L&apos;ensemble du contenu de BatiPilot est protégé par le droit de la propriété intellectuelle.<br><br>'
         + '<strong>Cookies :</strong> BatiPilot utilise uniquement des cookies strictement nécessaires (session). Aucun cookie publicitaire.'
       + '</div>'
     + '</div>'
     + '<div class="card">'
       + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px">Support</div>'
-      + '<a href="mailto:support@batipilot.fr" class="btn btn-secondary w-full" style="margin-bottom:8px">support@batipilot.fr</a>'
+      + '<a href="/cdn-cgi/l/email-protection#ed9e989d9d829f99ad8f8c99849d84818299c38b9f" class="btn btn-secondary w-full" style="margin-bottom:8px"><span class="__cf_email__" data-cfemail="6a191f1a1a05181e2a080b1e031a0306051e440c18">[email&#160;protected]</span></a>'
       + '<button class="btn btn-ghost w-full" onclick="go(&apos;rgpd&apos;)">Gestion des données personnelles</button>'
     + '</div>'
     + '</div>'
@@ -5685,32 +5669,38 @@ function pgLegal() {
 
 function initActivityLogHooks() {
   // Hook : création chantier
-  var _saveChantierOrig = window.saveChantier;
-  if (_saveChantierOrig) {
+  // On expose d'abord la fonction native au cas où elle ne serait pas encore sur window
+  if (typeof saveChantier === 'function' && !window.saveChantier) {
+    window.saveChantier = saveChantier;
+  }
+  var _saveChantierOrig = window.saveChantier || saveChantier;
+  if (typeof _saveChantierOrig === 'function') {
     window.saveChantier = async function(id) {
-      await _saveChantierOrig(id);
-      var ch = D.chantiers[0];
+      await _saveChantierOrig.call(window, id);
+      var ch = id ? D.chantiers.find(function(x){ return x.id===id; }) : D.chantiers[0];
       if (ch) logActivity('create', 'chantier', ch.id, ch.nom, { montant: ch.devis });
     };
   }
 
   // Hook : changement statut devis
-  var _setStatutDevisOrig = window.setStatutDevis;
-  if (_setStatutDevisOrig) {
+  if (typeof setStatutDevis === 'function' && !window._ssdHooked) {
+    window._ssdHooked = true;
+    var _ssdOrig = setStatutDevis;
     window.setStatutDevis = async function(id, statut) {
       var dvOld = D.devis_docs.find(function(d){ return d.id === id; });
       var oldStatut = dvOld ? dvOld.statut : '?';
-      await _setStatutDevisOrig(id, statut);
+      await _ssdOrig.call(window, id, statut);
       var dv = D.devis_docs.find(function(d){ return d.id === id; });
       logActivity('sign', 'devis', id, dv ? dv.numero : id, { ancien_statut: oldStatut, nouveau_statut: statut, montant: dv ? dv.total_ttc : 0 });
     };
   }
 
   // Hook : règlement facture
-  var _saveReglementOrig = window.saveReglement;
-  if (_saveReglementOrig) {
+  if (typeof saveReglement === 'function' && !window._srHooked) {
+    window._srHooked = true;
+    var _srOrig = saveReglement;
     window.saveReglement = async function(fcId) {
-      await _saveReglementOrig(fcId);
+      await _srOrig.call(window, fcId);
       var fc = (D.factures_client||[]).find(function(f){ return f.id === fcId; });
       if (fc) logActivity('payment', 'paiement', fcId, fc.numero || fcId, { montant: fc.total_ttc });
     };
@@ -5962,9 +5952,17 @@ function _dashQuickLink(page, ico, label, sub) {
   +'</div>';
 }
 
+
 </script>
 
 
+
+<!-- MODE SWITCHER -->
+<div id="mode-switcher">
+  <div class="mode-pill">
+    <button class="mode-btn active" id="mode-patron" onclick="switchMode('patron')">👷 Bureau</button>
+    <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">🦺 Terrain</button>
+  </div>
 </div>
 
 <!-- APP CONDUCTEUR DE TRAVAUX -->
