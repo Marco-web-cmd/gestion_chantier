@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow"><!-- App privée -->
 <title>BatiPilot — Gestion de chantiers</title>
 <!-- PWA : Installable sur écran d'accueil -->
-<link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22start_url%22%3A%20%22.%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image%2Fpng%22%7D%5D%0A%7D">
+<meta name="theme-color" content="#C0622A"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1C1E22">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1715,6 +1715,13 @@ let D={
 let OB={step:0,teams:[],cats:['Matériaux','Consommable','Outillage'],metrics:JSON.parse(JSON.stringify(DM))};
 let CAL={weekStart:null};
 
+// ── Variables offline globales ─────────────────────────────────
+var _isOnline    = navigator.onLine;
+var _offlineDB   = null;
+var _syncQueue   = [];
+var _offlineReady = false;
+
+
 // ── UTILS ─────────────────────────────────────────
 const $=id=>document.getElementById(id);
 function setContent(h){
@@ -1940,10 +1947,6 @@ async function saveSetting(){
     tva_num:D.settings.tva_num||'',
     website:D.settings.website||'',
     tva:D.settings.tva??20,
-    teams:D.settings.teams||[],
-    categories:D.settings.categories||['Matériaux','Consommable','Outillage'],
-    accent_color:D.settings.accent_color||'#C0622A',
-    metrics:D.settings.metrics||[],
     plan:D.settings.plan||'gratuit',
     devis_couleur:D.settings.devis_couleur||'#2D3E8C',
     devis_acompte:D.settings.devis_acompte??30,
