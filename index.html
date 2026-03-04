@@ -1948,6 +1948,14 @@ async function doLogin() {
     if (!email || !pwd) { authMsg('Email et mot de passe requis','error'); return; }
     if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
     loader('Connexion...');
+    // Purger les tokens Supabase obsolètes avant de se connecter
+    // (évite le conflit avec un token de recovery encore présent en localStorage)
+    try {
+      const sbKey = 'sb-zewyecoxpmycqdziuqzc-auth-token';
+      localStorage.removeItem(sbKey);
+      // Aussi signer out silencieusement pour nettoyer l'état interne du client
+      await SB.auth.signOut({ scope: 'local' });
+    } catch(e) {}
     const { data, error } = await SB.auth.signInWithPassword({ email, password: pwd });
     // Toujours masquer le loader immédiatement après la réponse
     hideLoader();
@@ -2072,8 +2080,12 @@ async function doUpdatePwd() {
       return;
     }
 
-    // Déconnexion explicite de la session recovery (elle est temporaire de toute façon)
-    try { await SB.auth.signOut(); } catch(e) {}
+    // Déconnexion explicite + purge complète du cache localStorage
+    // (le token recovery ne doit pas rester, il bloquerait la reconnexion)
+    try {
+      await SB.auth.signOut({ scope: 'local' });
+      localStorage.removeItem('sb-zewyecoxpmycqdziuqzc-auth-token');
+    } catch(e) {}
 
     hideLoader();
     $('auth-screen').style.display = 'flex';
