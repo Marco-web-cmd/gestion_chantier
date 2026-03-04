@@ -2247,6 +2247,7 @@ async function saveSetting(){
       var trialEnd = new Date(); trialEnd.setDate(trialEnd.getDate() + 30);
       D.settings.trial_ends_at = trialEnd.toISOString().slice(0,10);
     }
+    // Construire le payload complet
     const pFull = {
       user_id:USER.id, company:D.settings.company||'', trade:D.settings.trade||'',
       phone:D.settings.phone||'', email:D.settings.email||'', adresse:D.settings.adresse||'',
@@ -2258,20 +2259,23 @@ async function saveSetting(){
       trial_ends_at:D.settings.trial_ends_at||null,
       subscription_status:D.settings.subscription_status||'trial'
     };
-    const pMin = {
-      user_id:USER.id, company:D.settings.company||'', trade:D.settings.trade||'',
-      phone:D.settings.phone||'', email:D.settings.email||'',
-      trial_ends_at:D.settings.trial_ends_at||null
+    // Colonnes optionnelles qui peuvent manquer selon la version du schéma
+    // Retirer dynamiquement la colonne mentionnée dans l'erreur et réessayer
+    const _isColError = (e) => e && (e.code==='PGRST204'||e.code==='42703'||(e.message||'').includes('column'));
+    const _stripCol = (payload, errMsg) => {
+      const m = (errMsg||'').match(/column ['"]?(\w+)['"]?/);
+      if (m && m[1] && m[1] !== 'user_id') { const p = {...payload}; delete p[m[1]]; return p; }
+      return null;
     };
-    var r = await SB.from('settings').upsert(pFull, {onConflict:'user_id'});
-    if (r.error && (r.error.code==='PGRST204'||r.error.code==='42703'||(r.error.message||'').includes('column')||(r.error.code||'').includes('400')||r.error.status===400)) {
-      console.warn('[BatiPilot] saveSetting fallback:', r.error.message);
-      r = await SB.from('settings').upsert(pMin, {onConflict:'user_id'});
-    }
-    if (r.error && (r.error.code==='PGRST204'||r.error.code==='42703'||(r.error.message||'').includes('column'))) {
-      console.warn('[BatiPilot] saveSetting minimal fallback');
-      const pCore = {user_id:USER.id, company:D.settings.company||'', trade:D.settings.trade||''};
-      r = await SB.from('settings').upsert(pCore, {onConflict:'user_id'});
+    let payload = {...pFull};
+    let r = await SB.from('settings').upsert(payload, {onConflict:'user_id'});
+    // Jusqu'à 8 tentatives en supprimant la colonne problématique à chaque fois
+    for (let i = 0; i < 8 && r.error && _isColError(r.error); i++) {
+      console.warn('[BatiPilot] saveSetting: colonne manquante →', r.error.message);
+      const stripped = _stripCol(payload, r.error.message);
+      if (!stripped) break;
+      payload = stripped;
+      r = await SB.from('settings').upsert(payload, {onConflict:'user_id'});
     }
     hideSync();
     if (r.error) { toast('Erreur sauvegarde : '+(r.error.message||r.error.code||'inconnue'),'error'); }
