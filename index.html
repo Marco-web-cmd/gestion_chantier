@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow"><!-- App privée -->
 <title>BatiPilot — Gestion de chantiers</title>
 <!-- PWA : Installable sur écran d'accueil -->
-<link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22start_url%22%3A%20%22.%2F%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%0A%20%20%20%20%20%20%22sizes%22%3A%20%22192x192%22%2C%0A%20%20%20%20%20%20%22type%22%3A%20%22image%2Fpng%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D">
+<link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%0A%20%20%20%20%20%20%22sizes%22%3A%20%22192x192%22%2C%0A%20%20%20%20%20%20%22type%22%3A%20%22image%2Fpng%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D">
 <meta name="theme-color" content="#1C1E22">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -37,6 +37,10 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 .auth-tab.active{background:var(--bg-card);color:var(--text);box-shadow:var(--shadow-sm);}
 .auth-msg{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;display:none;}
 .auth-msg.error{background:var(--danger-soft);color:var(--danger);}.auth-msg.success{background:var(--success-soft);color:var(--success);}
+.pwd-wrap{position:relative;display:flex;align-items:center;}
+.pwd-wrap input{flex:1;padding-right:40px;}
+.pwd-eye{position:absolute;right:10px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted);padding:0;line-height:1;opacity:0.6;transition:opacity 0.2s;}
+.pwd-eye:hover{opacity:1;}
 #onboarding{position:fixed;inset:0;background:var(--bg-sidebar);display:none;align-items:center;justify-content:center;z-index:2500;overflow-y:auto;padding:20px;}
 .ob-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:48px;width:90%;max-width:580px;text-align:center;box-shadow:var(--shadow-lg);}
 .ob-logo{font-family:var(--font-display);font-size:36px;font-weight:900;margin-bottom:6px;}.ob-logo span{color:var(--accent);}
@@ -593,29 +597,141 @@ body.ct-mode
   <div class="auth-card">
     <div class="auth-logo">Bati<span>Pilot</span></div>
     <div class="auth-sub">Gestion de chantiers professionnelle</div>
-    <div class="auth-tabs">
+
+    <!-- Onglets principaux (masqués en mode reset/newpwd) -->
+    <div id="auth-tabs-bar" class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Se connecter</button>
       <button class="auth-tab" onclick="switchTab('signup')">Créer un compte</button>
     </div>
+
     <div id="auth-msg" class="auth-msg"></div>
+
+    <!-- ── Connexion ───────────────────────────────── -->
     <div id="tab-login">
-      <div class="form-group"><label>Email</label><input id="l-email" type="email" placeholder="votre@email.fr" autocomplete="email"></div>
-      <div class="form-group"><label>Mot de passe</label><input id="l-pwd" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password"></div>
-      <button class="btn btn-primary w-full" onclick="doLogin()" style="padding:12px;font-size:15px;margin-top:8px">Se connecter →</button>
-      <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted)"><a href="#" onclick="resetPwd()" style="color:var(--accent)">Mot de passe oublié ?</a></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="l-email" type="email" placeholder="votre@email.fr" autocomplete="email"
+               onkeydown="if(event.key==='Enter')document.getElementById('l-pwd').focus()">
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <div class="pwd-wrap">
+          <input id="l-pwd" type="password" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password">
+          <button type="button" class="pwd-eye" onclick="togglePwd('l-pwd',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button id="btn-login" class="btn btn-primary w-full" onclick="doLogin()" style="padding:12px;font-size:15px;margin-top:8px">
+        Se connecter →
+      </button>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted)">
+        <a href="#" onclick="switchTab('reset')" style="color:var(--accent)">Mot de passe oublié ?</a>
+      </div>
     </div>
+
+    <!-- ── Inscription ─────────────────────────────── -->
     <div id="tab-signup" style="display:none">
-      <div class="form-group"><label>Email</label><input id="s-email" type="email" placeholder="votre@email.fr" autocomplete="email"></div>
-      <div class="form-group"><label>Mot de passe</label><input id="s-pwd" type="password" placeholder="Minimum 6 caractères" autocomplete="new-password"></div>
-      <div class="form-group"><label>Confirmer</label><input id="s-pwd2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-      <div class="form-group"><label style="font-size:12px;color:var(--text-muted)">Code partenaire <span style="font-weight:400">(optionnel)</span></label><input id="s-code" type="text" placeholder="Ex: PARTENAIRE2024" style="font-size:13px"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="s-email" type="email" placeholder="votre@email.fr" autocomplete="email"
+               onkeydown="if(event.key==='Enter')document.getElementById('s-pwd').focus()">
+      </div>
+      <div class="form-group">
+        <label>Mot de passe <span id="pwd-strength-label" style="font-size:11px;margin-left:6px;font-weight:400"></span></label>
+        <div class="pwd-wrap">
+          <input id="s-pwd" type="password" placeholder="Minimum 6 caractères"
+                 autocomplete="new-password" oninput="checkPwdStrength(this.value)"
+                 onkeydown="if(event.key==='Enter')document.getElementById('s-pwd2').focus()">
+          <button type="button" class="pwd-eye" onclick="togglePwd('s-pwd',this)" tabindex="-1">👁</button>
+        </div>
+        <div id="pwd-strength-bar" style="height:3px;border-radius:2px;margin-top:5px;background:var(--border);overflow:hidden">
+          <div id="pwd-strength-fill" style="height:100%;width:0%;transition:width 0.3s,background 0.3s"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmer le mot de passe</label>
+        <div class="pwd-wrap">
+          <input id="s-pwd2" type="password" placeholder="••••••••"
+                 autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter')doSignup()">
+          <button type="button" class="pwd-eye" onclick="togglePwd('s-pwd2',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;color:var(--text-muted)">Code partenaire <span style="font-weight:400">(optionnel)</span></label>
+        <input id="s-code" type="text" placeholder="Ex: PARTENAIRE2024" style="font-size:13px">
+      </div>
       <label style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:12px;background:var(--bg-input);border-radius:8px;cursor:pointer">
         <input type="checkbox" id="s-rgpd" style="margin-top:2px;flex-shrink:0">
-        <span style="font-size:12px;color:var(--text-muted);line-height:1.6">J'accepte les <a href="#" onclick="event.stopPropagation();go('legal')" style="color:var(--accent)">CGV</a> et la <a href="#" onclick="event.stopPropagation();go('rgpd')" style="color:var(--accent)">politique de confidentialité</a>. Données hébergées en Europe.</span>
+        <span style="font-size:12px;color:var(--text-muted);line-height:1.6">
+          J'accepte les <a href="#" onclick="event.stopPropagation();go('legal')" style="color:var(--accent)">CGV</a>
+          et la <a href="#" onclick="event.stopPropagation();go('rgpd')" style="color:var(--accent)">politique de confidentialité</a>.
+          Données hébergées en Europe.
+        </span>
       </label>
-      <button class="btn btn-primary w-full" onclick="doSignup()" style="padding:12px;font-size:15px;margin-top:4px">🚀 Créer mon compte — 30 jours gratuits</button>
+      <button class="btn btn-primary w-full" onclick="doSignup()" style="padding:12px;font-size:15px;margin-top:4px">
+        🚀 Créer mon compte — 30 jours gratuits
+      </button>
     </div>
-    <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted)">🔒 Données sécurisées · 1er mois offert</div>
+
+    <!-- ── Mot de passe oublié ─────────────────────── -->
+    <div id="tab-reset" style="display:none">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:32px;margin-bottom:8px">🔑</div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:6px">Réinitialiser le mot de passe</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          Entrez votre email, nous vous enverrons un lien pour créer un nouveau mot de passe.
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="r-email" type="email" placeholder="votre@email.fr" autocomplete="email"
+               onkeydown="if(event.key==='Enter')doResetPwd()">
+      </div>
+      <button class="btn btn-primary w-full" onclick="doResetPwd()" style="padding:12px;font-size:15px;margin-top:8px">
+        📧 Envoyer le lien de réinitialisation
+      </button>
+      <div style="text-align:center;margin-top:16px">
+        <a href="#" onclick="switchTab('login')" style="font-size:13px;color:var(--text-muted)">← Retour à la connexion</a>
+      </div>
+    </div>
+
+    <!-- ── Nouveau mot de passe (après clic sur le lien email) ── -->
+    <div id="tab-newpwd" style="display:none">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:32px;margin-bottom:8px">🔒</div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:6px">Nouveau mot de passe</div>
+        <div style="font-size:13px;color:var(--text-muted)">Choisissez un mot de passe sécurisé.</div>
+      </div>
+      <div class="form-group">
+        <label>Nouveau mot de passe <span id="newpwd-strength-label" style="font-size:11px;margin-left:6px;font-weight:400"></span></label>
+        <div class="pwd-wrap">
+          <input id="np-pwd" type="password" placeholder="Minimum 6 caractères"
+                 autocomplete="new-password" oninput="checkNewPwdStrength(this.value)"
+                 onkeydown="if(event.key==='Enter')document.getElementById('np-pwd2').focus()">
+          <button type="button" class="pwd-eye" onclick="togglePwd('np-pwd',this)" tabindex="-1">👁</button>
+        </div>
+        <div id="newpwd-strength-bar" style="height:3px;border-radius:2px;margin-top:5px;background:var(--border);overflow:hidden">
+          <div id="newpwd-strength-fill" style="height:100%;width:0%;transition:width 0.3s,background 0.3s"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmer</label>
+        <div class="pwd-wrap">
+          <input id="np-pwd2" type="password" placeholder="••••••••"
+                 autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter')doUpdatePwd()">
+          <button type="button" class="pwd-eye" onclick="togglePwd('np-pwd2',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary w-full" onclick="doUpdatePwd()" style="padding:12px;font-size:15px;margin-top:8px">
+        ✅ Enregistrer le nouveau mot de passe
+      </button>
+    </div>
+
+    <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted)">
+      🔒 Données sécurisées · 1er mois offert
+    </div>
   </div>
 </div>
 
@@ -1753,47 +1869,181 @@ function metricsFields(c=null){const ms=(D.settings.metrics||[]).filter(m=>m.lab
 function getMetricsValues(){const ms=(D.settings.metrics||[]).filter(m=>m.label&&m.label.trim());return ms.map((_,i)=>{const el=document.getElementById('m-met-'+i);return el?+(el.value)||0:0;});}
 
 // ── AUTH ──────────────────────────────────────────
-function switchTab(t){['login','signup'].forEach((x,i)=>{$(x==='login'?'tab-login':'tab-signup').style.display=x===t?'block':'none';document.querySelectorAll('.auth-tab')[i].classList.toggle('active',x===t);});$('auth-msg').style.display='none';}
-function authMsg(msg,type){const m=$('auth-msg');m.textContent=msg;m.className=`auth-msg ${type}`;m.style.display='block';}
-async function doLogin(){
-  try{
-  const email=$('l-email').value.trim(),pwd=$('l-pwd').value;
-  if(!email||!pwd){authMsg('Email et mot de passe requis','error');return;}
-  loader('Connexion...');
-  const {error}=await SB.auth.signInWithPassword({email,password:pwd});
-  if(error){hideLoader();$('auth-screen').style.display='flex';authMsg('Email ou mot de passe incorrect','error');}
-  // Si succès: onAuthStateChange prend la main
-  }catch(e){toast('Erreur réseau : '+e.message,'error');hideLoader&&hideLoader();}
-}async function doSignup(){
-  const email=$('s-email').value.trim(),pwd=$('s-pwd').value,pwd2=$('s-pwd2').value;
-  if(!email||!pwd){authMsg('Email et mot de passe requis','error');return;}
-  if(pwd!==pwd2){authMsg('Les mots de passe ne correspondent pas','error');return;}
-  if(pwd.length<6){authMsg('Mot de passe trop court (min. 6 caractères)','error');return;}
-  const rgpd=$('s-rgpd');if(rgpd&&!rgpd.checked){authMsg('Veuillez accepter les CGV et la politique de confidentialité','error');return;}
+
+// Onglets : login | signup | reset | newpwd
+function switchTab(t) {
+  const tabs   = ['login','signup','reset','newpwd'];
+  const labels = ['Se connecter','Créer un compte'];
+  const tabsBar = $('auth-tabs-bar');
+  tabs.forEach(x => {
+    const el = $('tab-'+x);
+    if (el) el.style.display = (x === t) ? 'block' : 'none';
+  });
+  // Onglets visibles seulement pour login/signup
+  if (tabsBar) {
+    tabsBar.style.display = (t==='reset'||t==='newpwd') ? 'none' : 'flex';
+    document.querySelectorAll('.auth-tab').forEach((btn,i) => {
+      btn.classList.toggle('active', (i===0 && t==='login') || (i===1 && t==='signup'));
+    });
+  }
+  $('auth-msg').style.display = 'none';
+  // Autofocus sur le premier champ
+  const firstInput = { login:'l-email', signup:'s-email', reset:'r-email', newpwd:'np-pwd' };
+  setTimeout(() => { try{ $(firstInput[t]).focus(); }catch(e){} }, 80);
+}
+
+function authMsg(msg, type) {
+  const m = $('auth-msg');
+  m.textContent = msg;
+  m.className = 'auth-msg ' + (type||'');
+  m.style.display = 'block';
+}
+
+// Afficher/masquer mot de passe
+function togglePwd(id, btn) {
+  const inp = $(id);
+  if (!inp) return;
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  btn.textContent = isHidden ? '🙈' : '👁';
+}
+
+// Indicateur de force du mot de passe
+function _pwdStrength(pwd) {
+  let score = 0;
+  if (pwd.length >= 6)  score++;
+  if (pwd.length >= 10) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  return score; // 0-5
+}
+function _applyStrength(score, fillId, labelId) {
+  const fill  = $(fillId);
+  const label = $(labelId);
+  if (!fill || !label) return;
+  const levels = [
+    { pct:0,   color:'',                      txt:'' },
+    { pct:20,  color:'var(--danger)',          txt:'Très faible' },
+    { pct:40,  color:'var(--warning)',         txt:'Faible' },
+    { pct:65,  color:'#f59e0b',               txt:'Moyen' },
+    { pct:85,  color:'var(--success)',         txt:'Fort' },
+    { pct:100, color:'var(--success)',         txt:'Très fort' },
+  ];
+  const lvl = levels[score] || levels[0];
+  fill.style.width  = lvl.pct + '%';
+  fill.style.background = lvl.color;
+  label.textContent = lvl.txt;
+  label.style.color = lvl.color;
+}
+function checkPwdStrength(v)    { _applyStrength(_pwdStrength(v), 'pwd-strength-fill',    'pwd-strength-label'); }
+function checkNewPwdStrength(v) { _applyStrength(_pwdStrength(v), 'newpwd-strength-fill', 'newpwd-strength-label'); }
+
+// ── Connexion
+async function doLogin() {
+  try {
+    const email = $('l-email').value.trim();
+    const pwd   = $('l-pwd').value;
+    if (!email || !pwd) { authMsg('Email et mot de passe requis','error'); return; }
+    const btn = $('btn-login');
+    if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
+    loader('Connexion...');
+    const { error } = await SB.auth.signInWithPassword({ email, password: pwd });
+    if (error) {
+      hideLoader();
+      $('auth-screen').style.display = 'flex';
+      if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
+      const msg = (error.message||'').toLowerCase().includes('invalid')
+        ? 'Email ou mot de passe incorrect. Vérifiez vos identifiants.'
+        : 'Erreur de connexion : ' + error.message;
+      authMsg(msg, 'error');
+    }
+    // Si succès : onAuthStateChange prend la main
+  } catch(e) {
+    toast('Erreur réseau : ' + e.message, 'error');
+    hideLoader && hideLoader();
+  }
+}
+
+// ── Inscription
+async function doSignup() {
+  const email = $('s-email').value.trim();
+  const pwd   = $('s-pwd').value;
+  const pwd2  = $('s-pwd2').value;
+  if (!email || !pwd)   { authMsg('Email et mot de passe requis','error'); return; }
+  if (!email.includes('@')) { authMsg('Adresse email invalide','error'); return; }
+  if (pwd.length < 6)   { authMsg('Mot de passe trop court (minimum 6 caractères)','error'); return; }
+  if (pwd !== pwd2)     { authMsg('Les mots de passe ne correspondent pas','error'); return; }
+  const rgpd = $('s-rgpd');
+  if (rgpd && !rgpd.checked) { authMsg('Veuillez accepter les CGV et la politique de confidentialité','error'); return; }
   loader('Création du compte...');
-  const {data,error}=await SB.auth.signUp({email,password:pwd});
-  hideLoader();$('auth-screen').style.display='flex';
-  if(error){authMsg(error.message,'error');return;}
-  // Si confirmation email désactivée, l'utilisateur est connecté directement
-  if(data.session){return;} // onAuthStateChange gérera la suite
-  authMsg('✅ Compte créé ! Connectez-vous maintenant pour configurer votre espace.','success');
-  switchTab('login');
-  // Initialiser trial_ends_at J+30 pour le nouvel utilisateur
+  const { data, error } = await SB.auth.signUp({ email, password: pwd });
+  hideLoader();
+  $('auth-screen').style.display = 'flex';
+  if (error) { authMsg(error.message, 'error'); return; }
+  // Si confirmation email désactivée → connexion directe via onAuthStateChange
+  if (data.session) { return; }
+  // Initialiser trial_ends_at J+30
   if (data.user) {
-    var trialEnd = new Date(); trialEnd.setDate(trialEnd.getDate() + 30);
+    const trialEnd = new Date(); trialEnd.setDate(trialEnd.getDate() + 30);
     SB.from('settings').upsert({
       user_id: data.user.id,
       trial_ends_at: trialEnd.toISOString().slice(0,10),
       subscription_status: 'trial',
       plan: 'gratuit'
-    }, {onConflict: 'user_id'}).then(function(){});
+    }, { onConflict: 'user_id' }).then(() => {});
   }
-  // Pré-remplir l'email pour faciliter la connexion
-  try{$('l-email').value=$('s-email').value;}catch(e){}
+  authMsg('✅ Compte créé ! Un email de confirmation a été envoyé. Vérifiez votre boîte mail puis connectez-vous.', 'success');
+  switchTab('login');
+  try { $('l-email').value = email; } catch(e) {}
 }
-async function resetPwd(){
-  try{const email=prompt('Votre adresse email :');if(!email)return;const{error}=await SB.auth.resetPasswordForEmail(email);if(error)toast('Erreur : '+error.message,'error');else toast('Email de réinitialisation envoyé !');}catch(e){toast('Erreur réseau : '+e.message,'error');}
+
+// ── Demande de réinitialisation (envoi email)
+async function doResetPwd() {
+  try {
+    const email = $('r-email').value.trim();
+    if (!email) { authMsg('Veuillez saisir votre adresse email','error'); return; }
+    loader('Envoi du lien...');
+    const { error } = await SB.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href.split('#')[0]
+    });
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    if (error) { authMsg('Erreur : ' + error.message, 'error'); return; }
+    authMsg('📧 Email envoyé ! Vérifiez votre boîte mail et cliquez sur le lien pour créer un nouveau mot de passe.', 'success');
+  } catch(e) {
+    hideLoader && hideLoader();
+    toast('Erreur réseau : ' + e.message, 'error');
+  }
 }
+
+// ── Enregistrement du nouveau mot de passe (après clic lien email)
+async function doUpdatePwd() {
+  try {
+    const pwd  = $('np-pwd').value;
+    const pwd2 = $('np-pwd2').value;
+    if (!pwd)           { authMsg('Veuillez saisir un nouveau mot de passe','error'); return; }
+    if (pwd.length < 6) { authMsg('Mot de passe trop court (minimum 6 caractères)','error'); return; }
+    if (pwd !== pwd2)   { authMsg('Les mots de passe ne correspondent pas','error'); return; }
+    loader('Mise à jour...');
+    const { error } = await SB.auth.updateUser({ password: pwd });
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    if (error) { authMsg('Erreur : ' + error.message, 'error'); return; }
+    authMsg('✅ Mot de passe mis à jour ! Vous allez être connecté automatiquement.', 'success');
+    // L'utilisateur est déjà authentifié via le token de recovery → lancer l'app
+    setTimeout(async () => {
+      const { data: { session } } = await SB.auth.getSession();
+      if (session?.user && !_appLoaded) await startApp(session.user);
+    }, 1500);
+  } catch(e) {
+    hideLoader && hideLoader();
+    toast('Erreur réseau : ' + e.message, 'error');
+  }
+}
+
+// Compatibilité ancienne fonction (si appelée ailleurs)
+async function resetPwd() { switchTab('reset'); }
 async function doLogout(){
   try { await SB.auth.signOut(); } catch(e) {}
   // Purge complète du cache navigateur
@@ -1950,13 +2200,17 @@ async function saveSetting(){
     const pMin = {
       user_id:USER.id, company:D.settings.company||'', trade:D.settings.trade||'',
       phone:D.settings.phone||'', email:D.settings.email||'',
-      plan:D.settings.plan||'gratuit', subscription_status:D.settings.subscription_status||'trial',
       trial_ends_at:D.settings.trial_ends_at||null
     };
     var r = await SB.from('settings').upsert(pFull, {onConflict:'user_id'});
-    if (r.error && (r.error.code==='PGRST204'||r.error.code==='42703'||(r.error.message||'').includes('column'))) {
+    if (r.error && (r.error.code==='PGRST204'||r.error.code==='42703'||(r.error.message||'').includes('column')||(r.error.code||'').includes('400')||r.error.status===400)) {
       console.warn('[BatiPilot] saveSetting fallback:', r.error.message);
       r = await SB.from('settings').upsert(pMin, {onConflict:'user_id'});
+    }
+    if (r.error && (r.error.code==='PGRST204'||r.error.code==='42703'||(r.error.message||'').includes('column'))) {
+      console.warn('[BatiPilot] saveSetting minimal fallback');
+      const pCore = {user_id:USER.id, company:D.settings.company||'', trade:D.settings.trade||''};
+      r = await SB.from('settings').upsert(pCore, {onConflict:'user_id'});
     }
     hideSync();
     if (r.error) { toast('Erreur sauvegarde : '+(r.error.message||r.error.code||'inconnue'),'error'); }
@@ -3946,7 +4200,20 @@ async function startApp(user) {
     const sessionTimeout = new Promise((_,r)=>setTimeout(()=>r(new Error('session_timeout')),8000));
     const { data: { session }, error } = await Promise.race([sessionPromise, sessionTimeout]);
     _bootDone = true;
-    if (session?.user) {
+
+    // Détecter un token de récupération dans l'URL (type=recovery dans le hash)
+    const hash = window.location.hash || '';
+    const isRecovery = hash.includes('type=recovery') || hash.includes('type=magiclink');
+
+    if (isRecovery) {
+      // Supabase a déjà échangé le token — l'event PASSWORD_RECOVERY
+      // sera émis par onAuthStateChange. On affiche juste l'écran auth.
+      hideLoader();
+      $('auth-screen').style.display = 'flex';
+      // Nettoyer le hash de l'URL sans recharger la page
+      try { window.history.replaceState(null, '', window.location.pathname + window.location.search); } catch(e) {}
+      switchTab('newpwd');
+    } else if (session?.user) {
       await startApp(session.user);
     } else {
       // Pas de session → montrer l'écran de connexion
@@ -4194,7 +4461,15 @@ function closeOnboarding() {
 
 // 2. Écouter les changements d'état auth (login, logout, refresh token, etc.)
 SB.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
+  if (event === 'PASSWORD_RECOVERY') {
+    // L'utilisateur arrive depuis le lien email de réinitialisation
+    // → Afficher directement l'écran de saisie du nouveau mot de passe
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    $('app') && $('app').classList.remove('visible');
+    switchTab('newpwd');
+    return; // Ne pas lancer l'app
+  } else if (event === 'SIGNED_IN' && session?.user) {
     // Si getSession() a déjà géré le boot, ne pas redémarrer
     if (!_appLoaded) await startApp(session.user);
   } else if (event === 'SIGNED_OUT') {
