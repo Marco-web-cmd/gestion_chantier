@@ -56,7 +56,7 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 .ob-step{display:none;text-align:left;}.ob-step.active{display:block;}
 .step-title{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:8px;text-align:center;}
 .step-desc{color:var(--text-muted);font-size:14px;margin-bottom:28px;text-align:center;}
-#app{display:none;height:100vh;overflow:hidden;flex-direction:row;contain:layout;}#app.visible{display:flex;}
+#app{display:none;height:100vh;overflow:hidden;flex-direction:row;}#app.visible{display:flex;}
 
 .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.06);}
 .logo-mark{font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;display:flex;align-items:center;gap:10px;}
@@ -77,7 +77,7 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 .topbar-actions{display:flex;align-items:center;gap:10px;}
 /* ── Transitions de page ────────────────────────── */
 @keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-#content{flex:1;overflow-y:auto;overflow-x:hidden;padding:28px;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
+#content{flex:1;overflow-y:auto;padding:28px;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
 #content > *:first-child,.page-enter{animation:pageIn 0.22s cubic-bezier(0.34,1,0.64,1);}
 
 /* ── Sidebar Premium ────────────────────────────── */
@@ -2567,6 +2567,23 @@ async function loadAll(){
     D.employees       = D.employees     || [];
     D.time_entries    = D.time_entries  || [];
 
+    // ── Détection erreur schema cache au chargement ────────────────
+    // Si une requête Phase 1 retourne une erreur "column not found" ou "schema cache",
+    // c'est que la migration SQL a ajouté des colonnes mais le cache PostgREST
+    // n'a pas encore été rechargé. Afficher le banner immédiatement.
+    var _phase1Errors = [sr, cr, clr, dr, fr, fclr, str, mr];
+    var _schemaCacheErr = _phase1Errors.some(function(r) {
+      return r.error && r.error.message && (
+        r.error.message.includes('schema cache') ||
+        r.error.message.includes('Could not find') ||
+        (r.error.message.includes('column') && r.error.message.includes('does not exist'))
+      );
+    });
+    if (_schemaCacheErr) {
+      // Afficher immédiatement sans attendre un save
+      setTimeout(_showSchemaCacheToast, 500);
+    }
+
     hideLoader();
     const noSettings = !sr.data && !sr.error;
     if (noSettings) {
@@ -2811,10 +2828,10 @@ function _showSchemaCacheToast() {
   ].join(';');
   var _closeSCB = function() { document.getElementById('schema-cache-banner').remove(); _schemaCacheToastShown = false; };
   msg.innerHTML = '<span style="font-size:18px">\u26a0\ufe0f</span>'
-    + '<span style="flex:1"><strong>Cache sch\u00e9ma Supabase p\u00e9rim\u00e9</strong> \u2014 '
-    + 'Suite \u00e0 la migration SQL, Supabase doit recharger son sch\u00e9ma. '
-    + 'Allez dans <strong>Dashboard \u2192 Settings \u2192 API \u2192 Reload Schema Cache</strong>, '
-    + 'puis rechargez cette page.</span>'
+    + '<span style="flex:1"><strong>\u00c9tape requise : Reload Schema Cache</strong> \u2014 '
+    + 'La cr\u00e9ation/sauvegarde est bloqu\u00e9e jusqu\'\u00e0 ce que vous fassiez : '
+    + '<strong>Dashboard Supabase \u2192 Settings \u2192 API \u2192 Reload Schema Cache</strong>'
+    + ' \u2014 puis cliquez Recharger ci-contre.</span>'
     + '<button onclick="window.location.reload()" style="background:#C0622A;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;white-space:nowrap">\u21ba Recharger</button>'
     + '<button id="_scb_close" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer">\u2715</button>';
   document.body.prepend(msg);
@@ -4921,7 +4938,7 @@ async function startApp(user) {
       showAuthScreen();
       authMsg('Délai de connexion dépassé. Vérifiez votre réseau.', 'error');
     }
-  }, 15000); // 15s max pour le boot complet
+  }, 30000); // 30s max pour le boot complet (réseau lent + 3 tentatives session)
 
   try {
     await loadAll();
