@@ -1941,27 +1941,38 @@ function checkNewPwdStrength(v) { _applyStrength(_pwdStrength(v), 'newpwd-streng
 
 // ── Connexion
 async function doLogin() {
+  const btn = $('btn-login');
   try {
     const email = $('l-email').value.trim();
     const pwd   = $('l-pwd').value;
     if (!email || !pwd) { authMsg('Email et mot de passe requis','error'); return; }
-    const btn = $('btn-login');
     if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
     loader('Connexion...');
-    const { error } = await SB.auth.signInWithPassword({ email, password: pwd });
+    const { data, error } = await SB.auth.signInWithPassword({ email, password: pwd });
+    // Toujours masquer le loader immédiatement après la réponse
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
     if (error) {
-      hideLoader();
-      $('auth-screen').style.display = 'flex';
-      if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
       const msg = (error.message||'').toLowerCase().includes('invalid')
         ? 'Email ou mot de passe incorrect. Vérifiez vos identifiants.'
-        : 'Erreur de connexion : ' + error.message;
+        : (error.status === 400 || error.code === 'invalid_grant')
+          ? 'Email ou mot de passe incorrect.'
+          : 'Erreur de connexion : ' + (error.message || error.status || 'inconnue');
       authMsg(msg, 'error');
+      return;
     }
-    // Si succès : onAuthStateChange prend la main
+    // Si data.session existe, onAuthStateChange prendra la main
+    // Sinon (réponse vide inattendue), afficher l'écran de connexion
+    if (!data?.session) {
+      authMsg('Connexion impossible. Vérifiez vos identifiants et réessayez.', 'error');
+    }
   } catch(e) {
-    toast('Erreur réseau : ' + e.message, 'error');
-    hideLoader && hideLoader();
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
+    authMsg('Erreur réseau : vérifiez votre connexion internet.', 'error');
+    console.error('[doLogin]', e);
   }
 }
 
@@ -1977,10 +1988,20 @@ async function doSignup() {
   const rgpd = $('s-rgpd');
   if (rgpd && !rgpd.checked) { authMsg('Veuillez accepter les CGV et la politique de confidentialité','error'); return; }
   loader('Création du compte...');
-  const { data, error } = await SB.auth.signUp({ email, password: pwd });
+  let signupData, signupError;
+  try {
+    const res = await SB.auth.signUp({ email, password: pwd });
+    signupData = res.data; signupError = res.error;
+  } catch(e) {
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    authMsg('Erreur réseau : vérifiez votre connexion internet.', 'error');
+    return;
+  }
+  const data = signupData, error = signupError;
   hideLoader();
   $('auth-screen').style.display = 'flex';
-  if (error) { authMsg(error.message, 'error'); return; }
+  if (error) { authMsg(error.message || 'Erreur lors de la création du compte.', 'error'); return; }
   // Si confirmation email désactivée → connexion directe via onAuthStateChange
   if (data.session) { return; }
   // Initialiser trial_ends_at J+30
@@ -2000,45 +2021,66 @@ async function doSignup() {
 
 // ── Demande de réinitialisation (envoi email)
 async function doResetPwd() {
+  const email = $('r-email').value.trim();
+  if (!email) { authMsg('Veuillez saisir votre adresse email','error'); return; }
+  loader('Envoi du lien...');
   try {
-    const email = $('r-email').value.trim();
-    if (!email) { authMsg('Veuillez saisir votre adresse email','error'); return; }
-    loader('Envoi du lien...');
+    // Construire l'URL de retour dynamiquement depuis le domaine actuel
+    const redirectUrl = window.location.origin + window.location.pathname;
     const { error } = await SB.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href.split('#')[0]
+      redirectTo: redirectUrl
     });
     hideLoader();
     $('auth-screen').style.display = 'flex';
     if (error) { authMsg('Erreur : ' + error.message, 'error'); return; }
     authMsg('📧 Email envoyé ! Vérifiez votre boîte mail et cliquez sur le lien pour créer un nouveau mot de passe.', 'success');
   } catch(e) {
-    hideLoader && hideLoader();
-    toast('Erreur réseau : ' + e.message, 'error');
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    authMsg('Erreur réseau : vérifiez votre connexion internet.', 'error');
   }
 }
 
 // ── Enregistrement du nouveau mot de passe (après clic lien email)
 async function doUpdatePwd() {
+  const pwd  = $('np-pwd').value;
+  const pwd2 = $('np-pwd2').value;
+  if (!pwd)           { authMsg('Veuillez saisir un nouveau mot de passe','error'); return; }
+  if (pwd.length < 6) { authMsg('Mot de passe trop court (minimum 6 caractères)','error'); return; }
+  if (pwd !== pwd2)   { authMsg('Les mots de passe ne correspondent pas','error'); return; }
+  loader('Mise à jour...');
   try {
-    const pwd  = $('np-pwd').value;
-    const pwd2 = $('np-pwd2').value;
-    if (!pwd)           { authMsg('Veuillez saisir un nouveau mot de passe','error'); return; }
-    if (pwd.length < 6) { authMsg('Mot de passe trop court (minimum 6 caractères)','error'); return; }
-    if (pwd !== pwd2)   { authMsg('Les mots de passe ne correspondent pas','error'); return; }
-    loader('Mise à jour...');
+    // Vérifier que la session recovery est toujours active
+    const { data: { session: currentSession } } = await SB.auth.getSession();
+    if (!currentSession?.user) {
+      hideLoader();
+      $('auth-screen').style.display = 'flex';
+      authMsg('Session expirée. Veuillez redemander un lien de réinitialisation.', 'error');
+      switchTab('reset');
+      return;
+    }
     const { error } = await SB.auth.updateUser({ password: pwd });
     hideLoader();
     $('auth-screen').style.display = 'flex';
     if (error) { authMsg('Erreur : ' + error.message, 'error'); return; }
-    authMsg('✅ Mot de passe mis à jour ! Vous allez être connecté automatiquement.', 'success');
-    // L'utilisateur est déjà authentifié via le token de recovery → lancer l'app
+    authMsg('✅ Mot de passe mis à jour ! Connexion en cours…', 'success');
+    // Attendre un court instant puis lancer l'app (session déjà active)
     setTimeout(async () => {
-      const { data: { session } } = await SB.auth.getSession();
-      if (session?.user && !_appLoaded) await startApp(session.user);
-    }, 1500);
+      try {
+        const { data: { session } } = await SB.auth.getSession();
+        if (session?.user && !_appLoaded) {
+          await startApp(session.user);
+        } else if (!session?.user) {
+          showAuthScreen();
+          authMsg('Mot de passe mis à jour ! Connectez-vous maintenant.', 'success');
+          switchTab('login');
+        }
+      } catch(e) { showAuthScreen(); }
+    }, 800);
   } catch(e) {
-    hideLoader && hideLoader();
-    toast('Erreur réseau : ' + e.message, 'error');
+    hideLoader();
+    $('auth-screen').style.display = 'flex';
+    authMsg('Erreur réseau : vérifiez votre connexion internet.', 'error');
   }
 }
 
@@ -4152,11 +4194,15 @@ function showAuthScreen() {
   $('onboarding').style.display  = 'none';
 }
 // Afficher le bouton "Recharger" si le loader reste visible > 8s
+// Uniquement pendant le boot initial (pas pendant une connexion en cours)
+var _bootRetryShown = false;
 setTimeout(function() {
+  if (_bootDone) return; // boot déjà terminé, pas besoin du bouton
   var loaderEl = document.getElementById('loader');
   var retryBtn = document.getElementById('loader-retry');
-  if (loaderEl && loaderEl.style.display !== 'none' && retryBtn) {
+  if (loaderEl && loaderEl.style.display !== 'none' && retryBtn && !_bootRetryShown) {
     retryBtn.style.display = 'block';
+    _bootRetryShown = true;
   }
 }, 5000);
 
@@ -4191,32 +4237,52 @@ async function startApp(user) {
 }
 
 // ── Initialisation au démarrage de la page ──────────────────────
-// Stratégie : getSession() d\'abord (cache local, instantané)
-// onAuthStateChange en backup si getSession échoue ou délai réseau
+// IMPORTANT GitHub Pages : l'URL de recovery ressemble à
+//   https://marco-web-cmd.github.io/gestion_chantier/#access_token=XXX&type=recovery
+// window.location.hash = "#access_token=XXX&type=recovery"
+// Le hash doit être analysé EN PREMIER car getSession() consomme
+// le token et retourne session?.user = true, ce qui lancerait l'app
+// au lieu d'afficher le formulaire de nouveau mot de passe.
 (async () => {
   try {
-    // Timeout de sécurité : 8s max pour restaurer la session
-    const sessionPromise = SB.auth.getSession();
-    const sessionTimeout = new Promise((_,r)=>setTimeout(()=>r(new Error('session_timeout')),8000));
-    const { data: { session }, error } = await Promise.race([sessionPromise, sessionTimeout]);
-    _bootDone = true;
-
-    // Détecter un token de récupération dans l'URL (type=recovery dans le hash)
-    const hash = window.location.hash || '';
-    const isRecovery = hash.includes('type=recovery') || hash.includes('type=magiclink');
+    // 1. Analyser le hash AVANT tout appel Supabase
+    const rawHash = window.location.hash || '';
+    const hashParams = {};
+    rawHash.replace(/^#/, '').split('&').forEach(part => {
+      const eqIdx = part.indexOf('=');
+      if (eqIdx > 0) {
+        const k = decodeURIComponent(part.slice(0, eqIdx));
+        const v = decodeURIComponent(part.slice(eqIdx + 1));
+        hashParams[k] = v;
+      }
+    });
+    const tokenType  = hashParams['type'] || '';
+    const isRecovery = tokenType === 'recovery';
 
     if (isRecovery) {
-      // Supabase a déjà échangé le token — l'event PASSWORD_RECOVERY
-      // sera émis par onAuthStateChange. On affiche juste l'écran auth.
+      // Nettoyer le hash immédiatement pour éviter une boucle au rechargement
+      try { window.history.replaceState(null, '', window.location.pathname + window.location.search + '#'); } catch(e) {}
+      // Laisser Supabase échanger le token (getSession le consomme)
+      try {
+        const { data } = await SB.auth.getSession();
+        if (data?.session?.user) USER = data.session.user;
+      } catch(e) {}
+      _bootDone = true;
       hideLoader();
       $('auth-screen').style.display = 'flex';
-      // Nettoyer le hash de l'URL sans recharger la page
-      try { window.history.replaceState(null, '', window.location.pathname + window.location.search); } catch(e) {}
       switchTab('newpwd');
-    } else if (session?.user) {
+      return;
+    }
+
+    // 2. Cas normal : restaurer la session existante
+    const sessionPromise = SB.auth.getSession();
+    const sessionTimeout = new Promise((_,r)=>setTimeout(()=>r(new Error('session_timeout')),8000));
+    const { data: { session } } = await Promise.race([sessionPromise, sessionTimeout]);
+    _bootDone = true;
+
+    if (session?.user) {
       await startApp(session.user);
     } else {
-      // Pas de session → montrer l'écran de connexion
       showAuthScreen();
     }
   } catch(e) {
@@ -4462,14 +4528,20 @@ function closeOnboarding() {
 // 2. Écouter les changements d'état auth (login, logout, refresh token, etc.)
 SB.auth.onAuthStateChange(async (event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    // L'utilisateur arrive depuis le lien email de réinitialisation
-    // → Afficher directement l'écran de saisie du nouveau mot de passe
+    // Token de réinitialisation détecté par Supabase
+    // Stocker l'user pour que doUpdatePwd() puisse appeler updateUser()
+    if (session?.user) USER = session.user;
     hideLoader();
     $('auth-screen').style.display = 'flex';
     $('app') && $('app').classList.remove('visible');
+    // Si le hash a déjà été traité au boot, on est déjà sur tab-newpwd
+    // Sinon, y basculer maintenant
     switchTab('newpwd');
     return; // Ne pas lancer l'app
   } else if (event === 'SIGNED_IN' && session?.user) {
+    // Ignorer SIGNED_IN si on est en train de faire un reset de mot de passe
+    const tab = document.getElementById('tab-newpwd');
+    if (tab && tab.style.display !== 'none') return;
     // Si getSession() a déjà géré le boot, ne pas redémarrer
     if (!_appLoaded) await startApp(session.user);
   } else if (event === 'SIGNED_OUT') {
