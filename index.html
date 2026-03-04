@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow"><!-- App privée -->
 <title>BatiPilot — Gestion de chantiers</title>
 <!-- PWA : Installable sur écran d'accueil -->
-<link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22start_url%22%3A%20%22%2F%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image%2Fpng%22%7D%5D%0A%7D">
+<link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22start_url%22%3A%20%22.%2F%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%0A%20%20%20%20%20%20%22sizes%22%3A%20%22192x192%22%2C%0A%20%20%20%20%20%20%22type%22%3A%20%22image%2Fpng%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D">
 <meta name="theme-color" content="#1C1E22">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2790,7 +2790,7 @@ async function saveFacture(){
 
 // ── APPRO ─────────────────────────────────────────
 function pgAppro(){
-  if(!D.chantiers.length){setContent(`<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-title">Créez d'abord un chantier</div><button class="btn btn-primary btn-sm" onclick="go('chantiers')">Créer un chantier</button></div>`);return;}
+  if(!D.chantiers.length){setContent(`<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-title">Créez d\'abord un chantier</div><button class="btn btn-primary btn-sm" onclick="go('chantiers')">Créer un chantier</button></div>`);return;}
   $('t-pri').style.display='inline-flex';$('t-pri').textContent='+ Ajouter matériau';$('t-pri').onclick=()=>modalMat();
   const selId=$('appro-sel')?.value||D.chantiers[0].id;
   const ch=D.chantiers.find(c=>c.id===selId),mats=D.materiaux.filter(m=>m.chantier_id===selId);
@@ -3559,8 +3559,8 @@ function pgSalaires() {
           +'<td class="td-mono" style="color:var(--warning);font-weight:700">'+eur(e.hourly_cost)+'/h</td>'
           +'<td class="td-mono">'+(e.monthly_cost?eur(e.monthly_cost):'—')+'</td>'
           +'<td>'
-            +'<button class="btn btn-ghost btn-icon btn-sm" onclick="modalEmployee(''+e.id+'')">✏️</button>'
-            +'<button class="btn btn-ghost btn-icon btn-sm" onclick="delEmployee(''+e.id+'')">🗑️</button>'
+            +'<button class="btn btn-ghost btn-icon btn-sm" onclick="modalEmployee(\''+e.id+'\')">✏️</button>'
+            +'<button class="btn btn-ghost btn-icon btn-sm" onclick="delEmployee(\''+e.id+'\')">🗑️</button>'
           +'</td>'
         +'</tr>';
       }).join('')
@@ -3585,14 +3585,14 @@ function pgSalaires() {
         +'<td class="td-mono">'+eur(coutM)+'</td>'
         +'<td class="td-mono" style="color:var(--warning)">'+eur(mo.cout)
           +(mo.heures?'<br><span class="td-muted">'+Math.round(mo.heures*10)/10+'h</span>':'')
-          +(mo.heures?'<button class="btn btn-ghost btn-sm" style="padding:2px 5px;font-size:10px" onclick="detailMOChantier(''+c.id+'')">détail</button>':'')
+          +(mo.heures?'<button class="btn btn-ghost btn-sm" style="padding:2px 5px;font-size:10px" onclick="detailMOChantier(\''+c.id+'\')">détail</button>':'')
         +'</td>'
         +'<td class="td-mono">'+eur(coutT)+'</td>'
         +'<td class="td-mono" style="color:'+col+';font-weight:700">'+eur(marge)+'<br>'
           +'<span class="badge badge-'+(taux>=20?'green':taux>=10?'orange':'red')+'">'+taux+'%</span>'
         +'</td>'
         +'<td class="td-mono" style="color:'+eCol+'">'+(ecart>=0?'+':'')+eur(ecart)+'</td>'
-        +'<td><button class="btn btn-secondary btn-sm" onclick="modalPointage(''+c.id+'')">⏱ Pointer</button></td>'
+        +'<td><button class="btn btn-secondary btn-sm" onclick="modalPointage(\''+c.id+'\')">⏱ Pointer</button></td>'
       +'</tr>';
     }).join('') || '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Aucun chantier actif</div></div></td></tr>';
 
@@ -3607,13 +3607,13 @@ function pgSalaires() {
       +'<td class="td-mono">'+t.heures+'h</td>'
       +'<td class="td-mono" style="color:var(--warning)">'+eur(t.cout_total)+'</td>'
       +'<td><span class="badge badge-'+(t.statut==='valide'?'green':'blue')+'">'+esc(t.statut||'saisi')+'</span></td>'
-      +'<td><button class="btn btn-ghost btn-icon btn-sm" onclick="delPointage(''+t.id+'',''+t.chantier_id+'')">🗑️</button></td>'
+      +'<td><button class="btn btn-ghost btn-icon btn-sm" onclick="delPointage(\''+t.id+'\',\''+t.chantier_id+'\')">🗑️</button></td>'
     +'</tr>';
   }).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun pointage · Cliquez sur "⏱ Pointer" dans un chantier</td></tr>';
 
   setContent(
     '<div class="page-header">'
-    +'<div><div class="page-title">💶 Masse Salariale</div><div class="text-muted text-sm" style="margin-top:4px">Coûts main d'œuvre · Pointage · Rentabilité par chantier</div></div>'
+    +'<div><div class="page-title">💶 Masse Salariale</div><div class="text-muted text-sm" style="margin-top:4px">Coûts main d\'œuvre · Pointage · Rentabilité par chantier</div></div>'
     +'</div>'
     +'<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">'
       +'<div class="kpi-card orange"><div class="kpi-label">Effectif</div><div class="kpi-value">'+emps.length+'</div><div class="kpi-sub">employés actifs</div></div>'
@@ -3671,7 +3671,7 @@ function modalEmployee(id) {
   +'</div>'
   +'<div class="form-row form-row-3">'
     +'<div class="form-group"><label>Taux horaire brut (€/h) *</label>'
-      +'<input id="emp-rate" type="number" step="0.01" min="0" value="'+(e?e.hourly_rate:'')+'" placeholder="15.00" oninput="var r=parseFloat(this.value)||0;var c=document.getElementById('emp-cost');if(c&&!c._manual)c.value=(Math.round(r*1.45*100)/100).toFixed(2)">'
+      +'<input id="emp-rate" type="number" step="0.01" min="0" value="'+(e?e.hourly_rate:'')+'" placeholder="15.00" oninput="var r=parseFloat(this.value)||0;var c=document.getElementById(\'emp-cost\');if(c&&!c._manual)c.value=(Math.round(r*1.45*100)/100).toFixed(2)">'
     +'</div>'
     +'<div class="form-group"><label>Coût chargé patron (€/h) *</label>'
       +'<input id="emp-cost" type="number" step="0.01" min="0" value="'+(e?e.hourly_cost:'')+'" placeholder="22.00" oninput="this._manual=true">'
@@ -3685,9 +3685,9 @@ function modalEmployee(id) {
     +'<input id="emp-budget" type="number" step="0.01" min="0" value="'+(e&&e.budget_mo_prevu?e.budget_mo_prevu:'')+'" placeholder="Optionnel">'
   +'</div>';
 
-  modal(id?'Modifier l'employé':'Nouvel employé', body,
+  modal(id?'Modifier l\'employé':'Nouvel employé', body,
     '<button class="btn btn-secondary" onclick="closeModal()">Annuler</button>'
-    +'<button class="btn btn-primary" onclick="saveEmployee(''+(id||'')+'')">💾 Enregistrer</button>'
+    +`<button class="btn btn-primary" onclick="saveEmployee('${id||''}')" >💾 Enregistrer</button>`
   );
 }
 
@@ -3717,7 +3717,7 @@ async function saveEmployee(id) {
 
 async function delEmployee(id) {
   var hasE = (D.time_entries||[]).some(function(t){ return t.employee_id===id; });
-  if(hasE){ toast('Cet employé a des pointages — supprimez-les d'abord','error'); return; }
+  if(hasE){ toast('Cet employé a des pointages — supprimez-les d\'abord','error'); return; }
   if(!confirm('Supprimer cet employé ?')) return;
   D.employees = (D.employees||[]).filter(function(e){ return e.id!==id; });
   await del('employees', id);
@@ -3730,8 +3730,8 @@ function modalPointage(chantierId) {
   var emps = D.employees||[];
   if(!emps.length){
     modal('⏱ Pointage',
-      '<div class="alert alert-warning"><span>⚠️</span>Ajoutez d'abord des employés dans Masse Salariale avant de pointer.</div>',
-      '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button><button class="btn btn-primary" onclick="closeModal();go('salaires')">→ Masse Salariale</button>'
+      '<div class="alert alert-warning"><span>⚠️</span>Ajoutez d\'abord des employés dans Masse Salariale avant de pointer.</div>',
+      '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button><button class="btn btn-primary" onclick="closeModal();go(\'salaires\')">→ Masse Salariale</button>'
     );
     return;
   }
@@ -3864,7 +3864,7 @@ function detailMOChantier(cid) {
   }).join('')||'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">Aucun pointage</td></tr>';
   var totalMO=entries.reduce(function(a,t){ return a+(+t.cout_total||0); },0);
   var totalH =entries.reduce(function(a,t){ return a+(+t.heures||0); },0);
-  modal('👷 Main d'œuvre — '+(ch?ch.nom:''),
+  modal('👷 Main d\'œuvre — '+(ch?ch.nom:''),
     '<div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">'
       +'<div class="kpi-card orange"><div class="kpi-label">Coût MO total</div><div class="kpi-value" style="font-size:22px">'+eur(totalMO)+'</div></div>'
       +'<div class="kpi-card"><div class="kpi-label">Heures totales</div><div class="kpi-value" style="font-size:22px">'+Math.round(totalH*10)/10+'h</div></div>'
@@ -3874,7 +3874,7 @@ function detailMOChantier(cid) {
       +'<tbody>'+rows+'</tbody>'
     +'</table></div>',
     '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>'
-    +'<button class="btn btn-primary" onclick="closeModal();modalPointage(''+cid+'')">+ Nouveau pointage</button>'
+    +'<button class="btn btn-primary" onclick="closeModal();modalPointage(\''+cid+'\')">+ Nouveau pointage</button>'
   );
 }
 
@@ -3937,7 +3937,7 @@ async function startApp(user) {
 }
 
 // ── Initialisation au démarrage de la page ──────────────────────
-// Stratégie : getSession() d'abord (cache local, instantané)
+// Stratégie : getSession() d\'abord (cache local, instantané)
 // onAuthStateChange en backup si getSession échoue ou délai réseau
 (async () => {
   try {
@@ -6088,7 +6088,7 @@ function pgLegal() {
 
 function initActivityLogHooks() {
   // Hook : création chantier
-  // On expose d'abord la fonction native au cas où elle ne serait pas encore sur window
+  // On expose d\'abord la fonction native au cas où elle ne serait pas encore sur window
   if (typeof saveChantier === 'function' && !window.saveChantier) {
     window.saveChantier = saveChantier;
   }
@@ -6382,24 +6382,6 @@ function _dashQuickLink(page, ico, label, sub) {
     <button class="mode-btn active" id="mode-patron" onclick="switchMode('patron')">👷 Bureau</button>
     <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">🦺 Terrain</button>
   </div>
-</div>
-
-<!-- APP CONDUCTEUR DE TRAVAUX -->
-<div id="conducteur-app">
-  <div id="ct-topbar">
-    <div class="ct-logo">
-      <span style="font-size:22px">🦺</span>
-      <div>
-        <div>BatiPilot</div>
-        <div style="font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase">Conducteur de travaux</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div><span id="ct-company-tag" style="font-size:11px;color:var(--accent);font-weight:700"></span><span id="ct-chantier-tag" style="font-size:11px;color:rgba(255,255,255,0.45);display:block;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span></div>
-      <button onclick="switchMode('patron')" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit">← Bureau</button>
-    </div>
-  </div>
-  <div id="ct-content"><!-- rempli par JS --></div>
 </div>
 
 </body>
