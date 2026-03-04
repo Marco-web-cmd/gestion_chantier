@@ -1962,11 +1962,12 @@ async function doLogin() {
       authMsg(msg, 'error');
       return;
     }
-    if (data?.session) {
-      // Succès : NE PAS réafficher auth-screen, laisser onAuthStateChange → startApp()
-      // Le loader reste masqué, l'app va s'afficher via launchApp()
+    if (data?.session?.user) {
+      // Succès : lancer l'app directement sans attendre onAuthStateChange
+      // (plus fiable sur Safari / GitHub Pages où l'event peut ne pas se déclencher)
       if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
-      // onAuthStateChange(SIGNED_IN) prend la main
+      $('auth-screen').style.display = 'none';
+      if (!_appLoaded) await startApp(data.session.user);
     } else {
       hideLoader();
       $('auth-screen').style.display = 'flex';
