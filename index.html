@@ -2,10 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="description" content="BatiPilot — Gestion de chantiers BTP : devis, factures, conducteur de travaux, stocks et planning.">
 <meta name="robots" content="noindex, nofollow"><!-- App privée -->
 <title>BatiPilot — Gestion de chantiers</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23C0622A'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='20'>🏗</text></svg>">
+<link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23C0622A'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='20'>🏗</text></svg>">
 <!-- PWA : Installable sur écran d'accueil -->
 <link rel="manifest" href="data:application/manifest+json,%7B%0A%20%20%22name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22short_name%22%3A%20%22BatiPilot%22%2C%0A%20%20%22description%22%3A%20%22Gestion%20de%20chantiers%20BTP%22%2C%0A%20%20%22display%22%3A%20%22standalone%22%2C%0A%20%20%22background_color%22%3A%20%22%231C1E22%22%2C%0A%20%20%22theme_color%22%3A%20%22%23C0622A%22%2C%0A%20%20%22icons%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22src%22%3A%20%22https%3A%2F%2Fplacehold.co%2F192x192%2FC0622A%2Fffffff%3Ftext%3D%25F0%259F%258F%2597%22%2C%0A%20%20%20%20%20%20%22sizes%22%3A%20%22192x192%22%2C%0A%20%20%20%20%20%20%22type%22%3A%20%22image%2Fpng%22%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D">
 <meta name="theme-color" content="#1C1E22">
@@ -20,6 +22,9 @@
 <style>
 :root{--bg:#F4F1EC;--bg-card:#FDFCFA;--bg-sidebar:#1C1E22;--bg-input:#EFEDE8;--text:#1C1E22;--text-muted:#7A7670;--text-light:#A8A49E;--accent:#C0622A;--accent-soft:#F0DDD2;--accent-dark:#8C4520;--success:#2D7A4F;--success-soft:#D4EDDE;--warning:#B8860B;--warning-soft:#FFF3CD;--danger:#9B2335;--danger-soft:#FADADD;--info:#1D4ED8;--info-soft:#DBEAFE;--purple:#7C3AED;--purple-soft:#EDE9FE;--border:#DDD9D2;--border-dark:#C8C4BC;--shadow-sm:0 1px 3px rgba(28,30,34,0.08);--shadow-md:0 4px 16px rgba(28,30,34,0.10);--shadow-lg:0 8px 32px rgba(28,30,34,0.14);--radius-sm:6px;--radius-md:10px;--radius-lg:16px;--sidebar-w:240px;--font-display:'Fraunces',serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;--transition:all 0.18s cubic-bezier(0.4,0,0.2,1);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+/* ── Mobile UX essentials ── */
+*{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+input,textarea,select,button,a{touch-action:manipulation;}
 html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
 #loader{position:fixed;inset:0;background:var(--bg-sidebar);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3000;}
 .loader-logo{font-family:var(--font-display);font-size:28px;font-weight:900;color:#fff;margin-bottom:20px;}.loader-logo span{color:var(--accent);}
@@ -72,7 +77,7 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 .topbar-actions{display:flex;align-items:center;gap:10px;}
 /* ── Transitions de page ────────────────────────── */
 @keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-#content{flex:1;overflow-y:auto;padding:28px;contain:layout style;}
+#content{flex:1;overflow-y:auto;padding:28px;contain:layout style;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
 #content > *:first-child,.page-enter{animation:pageIn 0.22s cubic-bezier(0.34,1,0.64,1);}
 
 /* ── Sidebar Premium ────────────────────────────── */
@@ -112,7 +117,7 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 .btn-danger{background:var(--danger);color:#fff;box-shadow:0 2px 8px rgba(155,35,53,0.3);}
 .btn-danger:hover{box-shadow:0 4px 14px rgba(155,35,53,0.4);transform:translateY(-1px);}
 .btn-success{background:var(--success);color:#fff;box-shadow:0 2px 8px rgba(45,122,79,0.3);}
-.btn-sm{padding:6px 13px;font-size:12px;border-radius:var(--radius-sm);}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:var(--radius-sm);min-height:32px;}
 .btn-icon{padding:8px;width:36px;height:36px;justify-content:center;border-radius:var(--radius-sm);}
 .w-full{width:100%;}
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;box-shadow:var(--shadow-sm);transition:box-shadow 0.2s var(--ease-out),transform 0.2s var(--ease-out);}
@@ -134,7 +139,9 @@ input,select,textarea{width:100%;padding:10px 14px;background:var(--bg-input);bo
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,98,42,0.14),0 1px 4px rgba(28,30,34,0.08);}
 textarea{resize:vertical;min-height:80px;}
 select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7670' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
-.table-wrapper{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border);}
+.table-wrapper{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--border);-webkit-overflow-scrolling:touch;}
+/* Fallback: les tables directement dans .card sont aussi scrollables */
+.card > table, .card > div > table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
 table{width:100%;border-collapse:collapse;}
 thead th{background:var(--bg);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
 tbody tr{border-bottom:1px solid var(--border);transition:var(--transition);}tbody tr:last-child{border-bottom:none;}tbody tr:hover{background:var(--bg);}
@@ -226,7 +233,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 #topbar-menu-btn{display:none;background:var(--bg-input);border:1.5px solid var(--border-dark);border-radius:var(--radius-sm);width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;}
 
 /* ── Sidebar drawer mobile ──────────────────────────── */
-#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:499;backdrop-filter:blur(2px);}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:499;}
 #sidebar-overlay.open{display:block;}
 
 @keyframes sidebarSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
@@ -352,14 +359,15 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 }
 
 /* Overlay derrière la sidebar mobile */
+/* NOTE: PAS de backdrop-filter ici — Safari iOS l'applique aussi aux éléments
+   en z-index supérieur (dont la sidebar elle-même), causant un effet flou non voulu */
 #sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.48);
+  background: rgba(0,0,0,0.55);
   z-index: 499;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  /* backdrop-filter retiré volontairement — bug WebKit iOS */
 }
 #sidebar-overlay.open { display: block; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -451,24 +459,48 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
   .page-header  { margin-bottom: 16px; }
   .page-title   { font-size: 21px; }
   .kpi-value    { font-size: 22px; }
-  table thead   { display: none; }
-  table tbody tr {
-    display: flex; flex-direction: column;
-    padding: 14px 16px;
-    background: var(--bg-card);
-    border-radius: var(--radius-md);
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
+  /* Tables : scroll horizontal sur mobile — plus robuste que flex-column sans data-label */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 480px; font-size: 12px; }
+  table thead th { padding: 8px 10px; font-size: 10px; white-space: nowrap; }
+  table tbody td { padding: 10px 10px; white-space: nowrap; }
+  /* Masquer les colonnes secondaires en mobile pour les tables principales */
+  .td-hide-mobile { display: none; }
+  /* Input/select dans les tableaux de devis */
+  .devis-line input { font-size: 14px !important; }
+
+  /* ── Input font-size ≥ 16px : évite le zoom automatique iOS Safari ── */
+  input, select, textarea {
+    font-size: 16px !important;
   }
-  table tbody td {
-    padding: 3px 0; border: none; font-size: 13px;
+  /* Exceptions : petits champs stylisés (gardent une taille réduite mais restent > 16px visuellement) */
+  .devis-line input, table input, table select { font-size: 14px !important; }
+
+  /* ── Modales adaptées mobile ── */
+  .modal {
+    padding: 20px 18px !important;
+    max-height: 92dvh !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
   }
-  table tbody td::before {
-    content: attr(data-label);
-    font-weight: 700; color: var(--text-muted);
-    display: block; font-size: 10px;
-    text-transform: uppercase; letter-spacing: 0.5px;
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
   }
+  .modal-footer {
+    flex-direction: column;
+  }
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* ── Boutons d'action en pleine largeur sur mobile ── */
+  .btn-group-mobile > .btn { width: 100%; }
+
+  /* ── KPI grid 2 colonnes stable ── */
+  .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .kpi-card { padding: 12px 14px; }
+  .kpi-value { font-size: 20px; }
+  .kpi-label { font-size: 11px; }
 }
 
 /* ── Print ──────────────────────────────────────────────────────── */
@@ -586,6 +618,149 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
 /* Mode conducteur : sidebar cachée, conducteur full-screen */
 body.ct-mode #sidebar { display: none !important; }
 body.ct-mode 
+
+/* ══════════════════════════════════════════════════
+   WIDGET SUPPORT IA — BatiPilot Assistant
+   ══════════════════════════════════════════════════ */
+#bp-support-btn {
+  position: fixed;
+  bottom: 88px; /* au-dessus de la nav mobile */
+  right: 18px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C0622A, #E07B3A);
+  color: white;
+  font-size: 22px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(192,98,42,0.45);
+  z-index: 8000;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+#bp-support-btn:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(192,98,42,0.55); }
+@media (min-width: 769px) {
+  #bp-support-btn { bottom: 24px; right: 24px; }
+}
+
+#bp-support-panel {
+  position: fixed;
+  bottom: 156px; right: 18px;
+  width: min(380px, calc(100vw - 36px));
+  max-height: min(540px, calc(100dvh - 180px));
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.22);
+  z-index: 7999;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+#bp-support-panel.open { display: flex; }
+@media (min-width: 769px) {
+  #bp-support-panel { bottom: 88px; right: 24px; }
+}
+
+#bp-chat-header {
+  background: linear-gradient(135deg, #1C2B4A, #2D3E8C);
+  color: white;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+#bp-chat-header .bp-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+#bp-chat-header .bp-title { font-weight: 700; font-size: 14px; }
+#bp-chat-header .bp-subtitle { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+#bp-chat-close {
+  margin-left: auto; background: none; border: none;
+  color: white; opacity: 0.7; cursor: pointer; font-size: 20px;
+  padding: 2px 6px; border-radius: 6px;
+}
+#bp-chat-close:hover { opacity: 1; background: rgba(255,255,255,0.12); }
+
+#bp-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.bp-msg {
+  max-width: 88%;
+  padding: 9px 13px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+.bp-msg.assistant {
+  background: #f1f3f7;
+  color: #1C2B4A;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.bp-msg.user {
+  background: linear-gradient(135deg, #C0622A, #E07B3A);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.bp-msg.typing { color: #9ca3af; font-style: italic; }
+.bp-quick-btns {
+  padding: 6px 14px 8px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  flex-shrink: 0;
+}
+.bp-quick-btn {
+  background: #f1f5f9; border: 1px solid #e2e8f0;
+  border-radius: 20px; padding: 5px 11px;
+  font-size: 12px; color: #1C2B4A;
+  cursor: pointer; transition: background 0.15s;
+  white-space: nowrap;
+}
+.bp-quick-btn:hover { background: #e2e8f0; }
+
+#bp-chat-form {
+  padding: 10px 12px 12px;
+  border-top: 1px solid #f1f3f7;
+  display: flex; gap: 8px;
+  flex-shrink: 0;
+}
+#bp-chat-input {
+  flex: 1;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  outline: none;
+  resize: none;
+  min-height: 38px;
+  max-height: 90px;
+  line-height: 1.4;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+#bp-chat-input:focus { border-color: #C0622A; }
+#bp-chat-send {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #C0622A, #E07B3A);
+  border: none; color: white; cursor: pointer;
+  font-size: 16px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+}
+#bp-chat-send:hover { transform: scale(1.06); }
+#bp-chat-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 </style>
 </head>
 <body>
@@ -738,7 +913,7 @@ body.ct-mode
 <div id="onboarding">
   <div class="ob-card">
     <div class="ob-logo">Bati<span>Pilot</span></div>
-    <div class="ob-sub">CONFIGURONS VOTRE ESPACE — 2 MINUTES</div>
+    <div class="ob-sub">CONFIGURONS VOTRE ESPACE — 30 SECONDES</div>
     <div class="step-dots"><div class="step-dot active" id="dot-0"></div><div class="step-dot" id="dot-1"></div><div class="step-dot" id="dot-2"></div></div>
     <div class="ob-step active" id="step-0">
       <div class="step-title">Bienvenue 👷</div>
@@ -759,16 +934,16 @@ body.ct-mode
       </div>
       <div id="ob-metrics-list"></div>
       <button class="btn btn-secondary btn-sm" onclick="obAddMetric()" style="margin-bottom:14px;width:100%">+ Ajouter une métrique</button>
-      <div class="flex gap-2"><button class="btn btn-secondary" onclick="obNext(0)" style="flex:1">← Retour</button><button class="btn btn-primary" onclick="obNext(2)" style="flex:2">Continuer →</button></div>
+      <div class="flex gap-2"><button class="btn btn-secondary" onclick="obNext(0)" style="flex:1">← Retour</button><button class="btn btn-ghost" onclick="obNext(2)" style="flex:1;font-size:12px">Passer →</button><button class="btn btn-primary" onclick="obNext(2)" style="flex:2">Enregistrer →</button></div>
     </div>
     <div class="ob-step" id="step-2">
       <div class="step-title">Équipes & Catégories 👥</div>
-      <div class="step-desc">Configurez vos équipes et catégories de matériaux.</div>
+      <div class="step-desc" style="font-size:12.5px;color:var(--text-muted)">Optionnel — des valeurs par défaut sont prêtes. Modifiable dans ⚙️ Paramètres.</div>
       <div class="flex gap-2 mb-4" style="align-items:flex-end"><div style="flex:1"><label>Équipe / Collaborateur</label><input id="ob-team" placeholder="Ex: Jean, Équipe Marc..." onkeydown="if(event.key==='Enter')obAddTeam()"></div><button class="btn btn-secondary" onclick="obAddTeam()">+ Ajouter</button></div>
       <div id="ob-teams" style="min-height:36px;padding:6px 8px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:16px"><span class="text-sm text-muted">Aucune équipe</span></div>
       <div class="flex gap-2 mb-4" style="align-items:flex-end"><div style="flex:1"><label>Catégorie matériaux</label><input id="ob-cat" placeholder="Ex: Électricité, Plomberie..." onkeydown="if(event.key==='Enter')obAddCat()"></div><button class="btn btn-secondary" onclick="obAddCat()">+ Ajouter</button></div>
       <div id="ob-cats" style="min-height:36px;padding:6px 8px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:20px"></div>
-      <div class="flex gap-2"><button class="btn btn-secondary" onclick="obNext(1)" style="flex:1">← Retour</button><button class="btn btn-primary" id="ob-finish" onclick="obFinish()" style="flex:2;padding:12px;font-size:15px">🚀 Lancer BatiPilot</button></div>
+      <div class="flex gap-2"><button class="btn btn-secondary" onclick="obNext(1)" style="flex:1">← Retour</button><button class="btn btn-primary" id="ob-finish" onclick="obFinish()" style="flex:2;padding:12px;font-size:15px">🚀 C'est parti — créer mon 1er devis</button></div>
       <div style="text-align:center;margin-top:14px"><a href="#" onclick="obSkip()" style="font-size:12px;color:var(--text-muted)">Passer pour l'instant, configurer plus tard</a></div>
     </div>
   </div>
@@ -796,6 +971,7 @@ body.ct-mode
       <div class="nav-item" onclick="go('conducteur')"><span class="nav-ico">👷</span>Conducteur</div>
       <div class="nav-item" onclick="go('abonnement')"><span class="nav-ico">💳</span>Abonnement</div>
       <div class="nav-item" onclick="go('rgpd')"><span class="nav-ico">🔒</span>Mes données</div>
+      <div class="nav-item" onclick="exportMesData()" style="font-size:12.5px;opacity:0.85" title="Exporter toutes vos données (JSON)"><span class="nav-ico">📦</span>Exporter mes données</div>
       <div class="nav-item" onclick="go('legal')"><span class="nav-ico">📄</span>CGV & Légal</div>
       <div class="nav-item" onclick="go('logs')"><span class="nav-ico">📋</span>Journal</div>
       <div class="nav-item" onclick="go('settings')"><span class="nav-ico">⚙️</span>Paramètres</div>
@@ -876,6 +1052,57 @@ body.ct-mode
 </nav>
 
 <script>
+// ── Console silencing en production ─────────────────────────────────────────
+// En production (HTTPS non-localhost), on supprime console.log/info/debug pour
+// éviter toute fuite de données sensibles dans les DevTools.
+// console.warn et console.error sont conservés (erreurs critiques à surveiller).
+// En développement (localhost / file://), tous les logs restent actifs.
+(function() {
+  var isProd = (
+    location.protocol === 'https:' &&
+    location.hostname !== 'localhost' &&
+    location.hostname !== '127.0.0.1'
+  );
+  if (isProd) {
+    // Neutraliser les logs non-critiques
+    console.log  = function() {};
+    console.info = function() {};
+    console.debug = function() {};
+    // Wrapper warn/error : nettoyer les objets sensibles avant logging
+    var _origWarn  = console.warn.bind(console);
+    var _origError = console.error.bind(console);
+    var _sanitize  = function(args) {
+      return Array.from(args).map(function(a) {
+        if (a && typeof a === 'object') {
+          // Ne jamais logger d'objets — peut contenir tokens/emails/données
+          return '[object]';
+        }
+        // Masquer les patterns sensibles dans les strings
+        if (typeof a === 'string') {
+          return a
+            // Clés API et tokens
+            .replace(/sk-ant-[A-Za-z0-9_-]+/g, 'sk-ant-***')
+            .replace(/Bearer [A-Za-z0-9._-]+/g, 'Bearer ***')
+            .replace(/eyJ[A-Za-z0-9._-]{20,}/g, 'jwt-***')
+            // Mots de passe et secrets
+            .replace(/(password|mot_de_passe|mdp|secret|api_key|apikey|access_token|refresh_token)\s*[:=]\s*\S+/gi, '$1=[REDACTED]')
+            // Emails (ne pas logger les adresses utilisateur)
+            .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, '***@***.***')
+            // SIRET / numéros sensibles
+            .replace(/\b\d{3}\s?\d{3}\s?\d{3}\s?\d{5}\b/g, 'SIRET-***');
+        }
+        return a;
+      });
+    };
+    console.warn  = function() { _origWarn.apply(console,  _sanitize(arguments)); };
+    console.error = function() { _origError.apply(console, _sanitize(arguments)); };
+  }
+  // Helper interne BatiPilot (dev only)
+  window._bpLog = isProd ? function(){} : function() {
+    console.log.apply(console, ['[BP]'].concat(Array.from(arguments)));
+  };
+})();
+
 // ── BatiPilot v7 — Globals ──────────────────────────
 var OFFLINE_DB_NAME = 'batipilot-offline';
 var OFFLINE_DB_VER  = 1;
@@ -945,13 +1172,69 @@ let CT = {
 };
 
 // ── SWITCH DE MODE ────────────────────────────────────────────────
+// ── Vérification rôle côté serveur (anti-tampering console) ──────────
+// Appelée à chaque tentative de bascule en mode Patron.
+// Re-vérifie le rôle depuis la DB — si le conducteur a falsifié
+// _USER_ROLE en console, le serveur le rebloque et le déconnecte de la vue.
+// Retourne true si l'accès patron est confirmé, false si refusé.
+async function _verifyOwnerOrForceOut() {
+  try {
+    const q = await sq(
+      SB.from('company_users')
+        .select('role')
+        .eq('user_id', USER && USER.id)
+        .eq('actif', true)
+        .maybeSingle()
+    );
+    // Si la DB dit que cet uid est conducteur → forcer retour mode conducteur
+    if (q.data && q.data.role && q.data.role !== 'owner') {
+      _bpLog('[SECURITY] Tentative de bascule patron refusée par la DB — rôle:', q.data.role);
+      _USER_ROLE = q.data.role;
+      _doSwitchToConducteur();
+      toast('⛔ Accès propriétaire refusé par le serveur.', 'error');
+      return false; // Accès refusé
+    }
+    return true; // Accès confirmé (uid absent de company_users = patron)
+  } catch(e) {
+    // Erreur réseau : fail-open côté JS, mais RLS bloque les données côté DB.
+    _bpLog('[SECURITY] Vérif rôle réseau KO — RLS actif comme barrière finale');
+    return true;
+  }
+}
+
 function switchMode(mode) {
-  const appMain  = $('app');
-  const appCT    = $('conducteur-app');
-  const navCT    = $('ct-nav');
-  const switcher = $('mode-switcher');
-  const btnP     = $('mode-patron');
-  const btnC     = $('mode-conducteur');
+  // ── GARDE DE RÔLE — 3 niveaux de défense ─────────────────────────────────
+  //
+  // N1 (synchrone): _USER_ROLE var explicite, init 'conducteur'.
+  //   console> _USER_ROLE='owner'; switchMode('patron') → bloqué ici.
+  //
+  // N2 (async fond): _verifyOwnerOrForceOut() relit company_users.
+  //   Si DB contredit JS → switchMode('conducteur') forcé.
+  //
+  // N3 (permanent serveur): RLS Supabase — toute requête rejetée si
+  //   JWT != owner_id. Incontournable depuis le client.
+  //
+  if (mode === 'patron') {
+    // ── N1 : barrière synchrone — aucun rendu si rôle incorrect ──
+    if (_USER_ROLE !== 'owner') {
+      _log('[SECURITY] switchMode(patron) bloque - _USER_ROLE:', _USER_ROLE);
+      toast('\u26d4 Acces reserve au proprietaire du compte.', 'error');
+      // Re-forcer mode conducteur si l'UI a partiellement bougé
+      var _am = $('app'), _ac = $('conducteur-app');
+      if (_am) _am.classList.remove('visible');
+      if (_ac) _ac.classList.add('visible');
+      return; // STOP - aucun rendu patron
+    }
+    // ── N2 : reconfirmation serveur en fond ───────────────────────
+    _verifyOwnerOrForceOut();
+  }
+
+  var appMain  = $('app');
+  var appCT    = $('conducteur-app');
+  var navCT    = $('ct-nav');
+  var switcher = $('mode-switcher');
+  var btnP     = $('mode-patron');
+  var btnC     = $('mode-conducteur');
 
   if (mode === 'conducteur') {
     appMain && appMain.classList.remove('visible');
@@ -961,22 +1244,20 @@ function switchMode(mode) {
     btnC    && btnC.classList.add('active');
     switcher && switcher.classList.add('visible');
     document.body.classList.add('ct-mode');
-    // Fermer sidebar mobile si ouverte
     closeMobileSidebar();
     if (!CT.chantierId) {
-      const ch = D.chantiers.find(c => c.etat === 'En cours') || D.chantiers[0];
+      var ch = D.chantiers.find(function(c){ return c.etat === 'En cours'; }) || D.chantiers[0];
       if (ch) CT.chantierId = ch.id;
     }
-    const ctag = $('ct-company-tag');
+    var ctag = $('ct-company-tag');
     if (ctag) ctag.textContent = D.settings.company || '';
-    const ctch = $('ct-chantier-tag');
+    var ctch = $('ct-chantier-tag');
     if (ctch) {
-      const _ch = D.chantiers.find(c => c.id === CT.chantierId);
+      var _ch = D.chantiers.find(function(c){ return c.id === CT.chantierId; });
       ctch.textContent = _ch ? _ch.nom : '';
     }
     ctGo(CT.page || 'terrain');
   } else {
-    // Retour bureau — zéro manipulation display
     if (appCT) { appCT.classList.remove('visible'); appCT.style.cssText = ''; }
     appMain && appMain.classList.add('visible');
     navCT   && navCT.classList.remove('visible');
@@ -1803,7 +2084,17 @@ async function loadBLItems() {
 
 
 const SB=supabase.createClient('https://zewyecoxpmycqdziuqzc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpld3llY294cG15Y3Fkeml1cXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjAzNzIsImV4cCI6MjA4NzQzNjM3Mn0._HNh6Oh8q1jK15geQZ18dMGd7QI8Ql-tP0wxXim6g-I',{
-  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false},
+  auth:{
+    persistSession:    true,
+    autoRefreshToken:  true,
+    detectSessionInUrl:false,
+    // flowType:'implicit' : nécessaire pour les SPAs hébergées statiquement
+    // (GitHub Pages, Netlify, Vercel sans SSR) — évite le PKCE code_challenge
+    // qui nécessite une redirection vers le serveur OAuth
+    flowType: 'implicit',
+    // storageKey stable : évite les ruptures si l'URL Supabase change
+    storageKey: 'batipilot_auth_v1',
+  },
   global:{fetch:(url,opts={})=>{const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),15000);return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(tid));}}
 });
 let USER=null;
@@ -1821,7 +2112,11 @@ let D={
     plan:'gratuit',
     subscription_status:'trial',
     trial_ends_at:null,
-    trial_start:null
+    trial_start:null,
+    // Champs assurance BTP (v11)
+    assurance_decennale:'',
+    rcp:'',
+    qualibat:'',
   },
   chantiers:[],stocks:[],materiaux:[],clients:[],mouvements:[],
   devis_docs:[],factures:[],factures_client:[],
@@ -1952,7 +2247,21 @@ function checkPwdStrength(v)    { _applyStrength(_pwdStrength(v), 'pwd-strength-
 function checkNewPwdStrength(v) { _applyStrength(_pwdStrength(v), 'newpwd-strength-fill', 'newpwd-strength-label'); }
 
 // ── Connexion
+// ── Rate limiting client (défense en profondeur — Supabase a son propre rate limit) ──
+var _authCooldown = {};
+function _checkAuthCooldown(key, limitMs) {
+  var now = Date.now(), last = _authCooldown[key] || 0;
+  if (now - last < limitMs) {
+    var reste = Math.ceil((limitMs - (now - last)) / 1000);
+    toast('Trop de tentatives — réessayez dans ' + reste + 's', 'error');
+    return false;
+  }
+  _authCooldown[key] = now;
+  return true;
+}
+
 async function doLogin() {
+  if (!_checkAuthCooldown('login', 2000)) return; // max 1 tentative / 2s
   const btn = $('btn-login');
   try {
     const email = $('l-email').value.trim();
@@ -1975,16 +2284,12 @@ async function doLogin() {
       return;
     }
     if (data?.session?.user) {
-      console.log('[BP] Login OK - user:', data.session.user.email);
-      console.log('[BP] _appLoaded:', _appLoaded, '_recoveryMode:', _recoveryMode);
+
       if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
       $('auth-screen').style.display = 'none';
       if (!_appLoaded) {
-        console.log('[BP] Calling startApp...');
         await startApp(data.session.user);
-        console.log('[BP] startApp returned');
       } else {
-        console.log('[BP] startApp skipped - already loaded');
       }
     } else {
       hideLoader();
@@ -1997,12 +2302,13 @@ async function doLogin() {
     $('auth-screen').style.display = 'flex';
     if (btn) { btn.disabled = false; btn.textContent = 'Se connecter →'; }
     authMsg('Erreur réseau : vérifiez votre connexion internet.', 'error');
-    console.error('[doLogin]', e);
+    console.error('[BatiPilot][doLogin]', e instanceof Error ? e.message : String(e));
   }
 }
 
 // ── Inscription
 async function doSignup() {
+  if (!_checkAuthCooldown('signup', 5000)) return; // max 1 inscription / 5s
   const email = $('s-email').value.trim();
   const pwd   = $('s-pwd').value;
   const pwd2  = $('s-pwd2').value;
@@ -2101,7 +2407,8 @@ async function doUpdatePwd() {
     // (le token recovery ne doit pas rester, il bloquerait la reconnexion)
     try {
       await SB.auth.signOut({ scope: 'local' });
-      localStorage.removeItem('sb-zewyecoxpmycqdziuqzc-auth-token');
+      localStorage.removeItem('sb-zewyecoxpmycqdziuqzc-auth-token'); // ancienne clé
+      localStorage.removeItem('batipilot_auth_v1');                  // nouvelle clé v12
     } catch(e) {}
 
     hideLoader();
@@ -2171,67 +2478,97 @@ function showSkeletonLoader(n) {
   if (el) el.innerHTML = '<div class="page-header"><div class="skeleton skeleton-title" style="width:200px;height:24px"></div></div>' + cards;
 }
 async function loadAll(){
-  console.log('[BP] loadAll started, USER.id=', USER?.id);
   showSkeletonLoader(4);
-  loader('Chargement de vos données...');
-  // Wrapper avec timeout : retourne {data:null,error} si la requête échoue ou dépasse 6s
-  function sq(q){
-    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000)); // 10s timeout réseau
-    return Promise.race([q,timeout]).then(r=>r).catch(e=>({data:null,error:{message:String(e)}}));
+  loader('Chargement...');
+
+  // Wrapper timeout universel
+  function sq(q, ms){
+    ms = ms || 12000;
+    const t = new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), ms));
+    return Promise.race([q, t]).catch(e => ({data:null, error:{message:String(e)}}));
   }
-  try{
-    const[sr,cr,str,mr,clr,dr,fr,fclr,mvr,cpr,ncr,blr,docr,er,tr]=await Promise.all([
-      sq(SB.from('settings').select('*').eq('user_id',USER.id).maybeSingle()),
-      sq(SB.from('chantiers').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('stocks').select('*').eq('user_id',USER.id).order('libelle')),
-      sq(SB.from('materiaux').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('clients').select('*').eq('user_id',USER.id).order('nom')),
-      sq(SB.from('devis_docs').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('factures').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('factures_client').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('mouvements').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}).limit(200)),
-      sq(SB.from('conducteur_pins').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('notes_chantier').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}).limit(500)),
-      sq(SB.from('bl_items').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}).limit(500)),
-      sq(SB.from('ct_docs').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('employees').select('*').eq('user_id',USER.id).order('created_at',{ascending:false})),
-      sq(SB.from('time_entries').select('*').eq('user_id',USER.id).order('date_travail',{ascending:false}).limit(1000))
+
+  // ── PHASE 1 : données critiques (affiche l'app immédiatement) ────────────
+  // settings, chantiers, clients, devis, factures, stocks, conducteur
+  try {
+    // ── Rôle utilisateur (conducteur ou patron ?) ─────────────────────────────
+    // On vérifie d'abord si cet uid est listé comme conducteur/invité dans company_users.
+    // Si oui, _USER_ROLE ← son rôle réel ; sinon il est patron de sa propre entreprise.
+    // Note : la vraie sécurité est dans les policies RLS côté Supabase (get_user_role()).
+    // Ce fetch côté client sert uniquement à adapter l'UI (cacher les pages financières).
+    const roleQuery = await sq(
+      SB.from('company_users')
+        .select('role, owner_id')
+        .eq('user_id', USER.id)
+        .eq('actif', true)
+        .maybeSingle()
+    );
+    if (roleQuery.data && roleQuery.data.role) {
+      _USER_ROLE = roleQuery.data.role; // 'conducteur' | 'lecture'
+      // Stocker l'owner_id pour que loadAll puisse requêter avec le bon user_id
+      USER._ownerIdForQuery = roleQuery.data.owner_id;
+    } else {
+      _USER_ROLE = 'owner';
+      USER._ownerIdForQuery = USER.id;
+    }
+
+    const _qid = USER._ownerIdForQuery; // shortcut pour toutes les requêtes Phase 1
+
+    const [sr,cr,clr,dr,fr,fclr,str,mr,cpr,docr] = await Promise.all([
+      sq(SB.from('settings').select('*').eq('user_id',_qid).maybeSingle()),
+      sq(SB.from('chantiers').select('*').eq('user_id',_qid).order('created_at',{ascending:false})),
+      sq(SB.from('clients').select('*').eq('user_id',_qid).order('nom')),
+      sq(SB.from('devis_docs').select('*').eq('user_id',_qid).order('created_at',{ascending:false}).range(0,99)),
+      sq(SB.from('factures').select('*').eq('user_id',_qid).order('created_at',{ascending:false}).range(0,99)),
+      sq(SB.from('factures_client').select('*').eq('user_id',_qid).order('created_at',{ascending:false}).range(0,99)),
+      sq(SB.from('stocks').select('*').eq('user_id',_qid).order('libelle')),
+      sq(SB.from('materiaux').select('*').eq('user_id',_qid).order('created_at',{ascending:false})),
+      sq(SB.from('conducteur_pins').select('*').eq('user_id',_qid).order('created_at',{ascending:false})),
+      sq(SB.from('ct_docs').select('*').eq('user_id',_qid).order('created_at',{ascending:false})),
     ]);
-    if(sr.error){ /* settings absents → premier lancement */ }
-    if(cr.error){ D.chantiers=[]; }
-    if(dr.error){ D.devis_docs=[]; }
-    if(fr.error){ D.factures=[]; }
-    if(mvr.error){ D.mouvements=[]; }
-    if(sr.data){
-      D.settings={
-        company:sr.data.company||'',trade:sr.data.trade||'',phone:sr.data.phone||'',email:sr.data.email||'',
-        adresse:sr.data.adresse||'',siret:sr.data.siret||'',tva_num:sr.data.tva_num||'',logo:sr.data.logo||'',website:sr.data.website||'',tva:sr.data.tva??20,
-        devis_couleur:sr.data.devis_couleur||'#2D3E8C',devis_acompte:sr.data.devis_acompte??30,
+
+    // Hydrater D.settings
+    if (sr.data) {
+      D.settings = {
+        company:sr.data.company||'', trade:sr.data.trade||'', phone:sr.data.phone||'',
+        email:sr.data.email||'', adresse:sr.data.adresse||'', siret:sr.data.siret||'',
+        tva_num:sr.data.tva_num||'', logo:sr.data.logo||'', website:sr.data.website||'',
+        tva:sr.data.tva??20,
+        devis_couleur:sr.data.devis_couleur||'#2D3E8C',
+        devis_acompte:sr.data.devis_acompte??30,
         devis_conditions:sr.data.devis_conditions||'Paiement 30 jours fin de mois.',
         devis_mentions:sr.data.devis_mentions||'Devis valable 30 jours.',
-        teams:sr.data.teams||[],categories:sr.data.categories||['Matériaux','Consommable','Outillage'],
-        accent_color:sr.data.accent_color||'#C0622A',metrics:sr.data.metrics||JSON.parse(JSON.stringify(DM)),
+        teams:sr.data.teams||[], categories:sr.data.categories||['Matériaux','Consommable','Outillage'],
+        accent_color:sr.data.accent_color||'#C0622A',
+        metrics:sr.data.metrics||JSON.parse(JSON.stringify(DM)),
         plan:sr.data.plan||'gratuit',
         trial_start:sr.data.trial_start||null,
         trial_ends_at:sr.data.trial_ends_at||null,
-        subscription_status:sr.data.subscription_status||'trial'
+        subscription_status:sr.data.subscription_status||'trial',
+        // Champs assurance BTP (v11)
+        assurance_decennale:sr.data.assurance_decennale||'',
+        rcp:sr.data.rcp||'',
+        qualibat:sr.data.qualibat||'',
       };
     }
-    D.chantiers=cr.data||[];D.stocks=str.data||[];D.materiaux=mr.data||[];
-    D.clients=clr.data||[];D.devis_docs=dr.data||[];D.factures=fr.data||[];D.factures_client=fclr.data||[];D.mouvements=mvr.data||[];
-    D.conducteur_pins=cpr.data||[];
-    D.notes_chantier=ncr.data||[];
-    D.bl_items=blr.data||[];
-    D.ct_docs=docr.data||[];
-    D.employees=er?.data||[];
-    D.time_entries=tr?.data||[];
-    if(blr.error){ D.bl_items=[]; } // table bl_items optionnelle
-    if(docr.error){ D.ct_docs=[]; } // table ct_docs optionnelle
+    D.chantiers       = cr.data   || [];
+    D.clients         = clr.data  || [];
+    D.devis_docs      = dr.data   || [];
+    D.factures        = fr.data   || [];
+    D.factures_client = fclr.data || [];
+    D.stocks          = str.data  || [];
+    D.materiaux       = mr.data   || [];
+    D.conducteur_pins = cpr.data  || [];
+    D.ct_docs         = docr.error ? [] : (docr.data || []);
+    // Initialiser les collections lazy à vide (remplies en Phase 2)
+    D.mouvements      = D.mouvements    || [];
+    D.notes_chantier  = D.notes_chantier || [];
+    D.bl_items        = D.bl_items      || [];
+    D.employees       = D.employees     || [];
+    D.time_entries    = D.time_entries  || [];
+
     hideLoader();
-    // Onboarding si premier démarrage (pas de settings, pas d'erreur réseau)
-    // noSettings = connecté mais jamais configuré (premier lancement)
     const noSettings = !sr.data && !sr.error;
-    // srError = erreur réseau/table sur settings (pas bloquant)
     if (noSettings) {
       $('onboarding').style.display='flex';
       obRenderMetrics(); obRenderCats();
@@ -2240,14 +2577,52 @@ async function loadAll(){
     }
   } catch(e) {
     hideLoader();
-    // En cas d'erreur grave, lancer quand même l'app (les données seront vides)
     const msg = e.message && e.message !== 'timeout' ? e.message : 'Connexion lente ou instable';
     toast('⚠️ Chargement partiel — ' + msg, 'error');
-    launchApp(); // L'app fonctionne avec données vides, rechargement possible
+    launchApp();
   }
+
+  // ── PHASE 2 : données volumineuses (lazy, en arrière-plan) ──────────────
+  // Ne bloque pas l'affichage. Erreurs silencieuses.
+  loadLazyData();
+}
+
+/* Chargement différé des tables volumineuses.
+   Appelé après launchApp() pour ne pas retarder le premier affichage.
+   Peut être rappelé pour rafraîchir un module spécifique. */
+async function loadLazyData(module) {
+  function sq(q){ return q.catch(() => ({data:null,error:true})); }
+  var now = new Date();
+  // Fenêtre glissante : 90 jours pour notes/mouvements, mois courant pour time_entries
+  var d90 = new Date(now - 90*24*3600*1000).toISOString().slice(0,10);
+  var moisDebut = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-01';
+
+  try {
+    const [mvr, ncr, blr, er, tr] = await Promise.all([
+      sq(SB.from('mouvements').select('*').eq('user_id',USER.id)
+         .gte('created_at', d90).order('created_at',{ascending:false}).range(0,199)),
+      sq(SB.from('notes_chantier').select('*').eq('user_id',USER.id)
+         .gte('created_at', d90).order('created_at',{ascending:false}).range(0,299)),
+      sq(SB.from('bl_items').select('*').eq('user_id',USER.id)
+         .order('created_at',{ascending:false}).range(0,199)),
+      sq(SB.from('employees').select('*').eq('user_id',USER.id)
+         .order('created_at',{ascending:false})),
+      sq(SB.from('time_entries').select('*').eq('user_id',USER.id)
+         .gte('date_travail', moisDebut).order('date_travail',{ascending:false}).range(0,499)),
+    ]);
+    if (!mvr.error)  D.mouvements     = mvr.data || D.mouvements;
+    if (!ncr.error)  D.notes_chantier = ncr.data || D.notes_chantier;
+    if (!blr.error)  D.bl_items       = blr.data || D.bl_items;
+    if (!er.error)   D.employees      = er.data  || D.employees;
+    if (!tr.error)   D.time_entries   = tr.data  || D.time_entries;
+    // Rafraîchir silencieusement la page courante si elle consomme ces données
+    var lazyPages = ['appro','stock','salaires','conducteur','logs'];
+    if (window._currentPage && lazyPages.includes(window._currentPage)) {
+      go(window._currentPage);
+    }
+  } catch(e) { /* silencieux */ }
 }
 function launchApp(){
-  console.log('[BP] launchApp called');
   // Masquer le loader définitivement - forcer via style inline
   var loaderEl = document.getElementById('loader');
   if (loaderEl) {
@@ -2255,6 +2630,15 @@ function launchApp(){
     loaderEl.setAttribute('style','display:none!important');
   }
   hideLoader();
+
+  // ── RESTRICTIONS UI SELON LE RÔLE ──────────────────────────────────────────
+  // Note : ces restrictions sont une couche UX. La protection réelle est dans
+  // les policies RLS Supabase (migration v11.2). Même avec DevTools, un
+  // conducteur ne peut pas accéder aux données financières — Supabase bloque.
+  applyRoleRestrictions();
+
+  // Vérification abonnement au démarrage (P0 — remplace le seul checkPaywall)
+  setTimeout(function() { checkSubscriptionStatus(false); }, 1000);
   setTimeout(showPlanBanner, 800);
   setTimeout(cacheDataForOffline, 2000);
   showOnboardingWaouh();
@@ -2280,17 +2664,35 @@ async function saveSetting(){
       var trialEnd = new Date(); trialEnd.setDate(trialEnd.getDate() + 30);
       D.settings.trial_ends_at = trialEnd.toISOString().slice(0,10);
     }
-    // Construire le payload complet
+    // Construire le payload complet (TOUS les champs settings)
     const pFull = {
-      user_id:USER.id, company:D.settings.company||'', trade:D.settings.trade||'',
-      phone:D.settings.phone||'', email:D.settings.email||'', adresse:D.settings.adresse||'',
-      siret:D.settings.siret||'', tva_num:D.settings.tva_num||'', website:D.settings.website||'',
-      tva:D.settings.tva??20, plan:D.settings.plan||'gratuit',
-      devis_couleur:D.settings.devis_couleur||'#2D3E8C', devis_acompte:D.settings.devis_acompte??30,
-      devis_conditions:D.settings.devis_conditions||'Paiement à 30 jours fin de mois.',
-      devis_mentions:D.settings.devis_mentions||'Devis valable 30 jours.',
-      trial_ends_at:D.settings.trial_ends_at||null,
-      subscription_status:D.settings.subscription_status||'trial'
+      user_id:              USER.id,
+      company:              D.settings.company              || '',
+      trade:                D.settings.trade                || '',
+      phone:                D.settings.phone                || '',
+      email:                D.settings.email                || '',
+      adresse:              D.settings.adresse              || '',
+      siret:                D.settings.siret                || '',
+      tva_num:              D.settings.tva_num              || '',
+      website:              D.settings.website              || '',
+      logo:                 D.settings.logo                 || '',
+      tva:                  D.settings.tva                  ?? 20,
+      plan:                 D.settings.plan                 || 'gratuit',
+      subscription_status:  D.settings.subscription_status  || 'trial',
+      trial_ends_at:        D.settings.trial_ends_at        || null,
+      trial_start:          D.settings.trial_start          || null,
+      devis_couleur:        D.settings.devis_couleur        || '#2D3E8C',
+      devis_acompte:        D.settings.devis_acompte        ?? 30,
+      devis_conditions:     D.settings.devis_conditions     || 'Paiement à 30 jours fin de mois.',
+      devis_mentions:       D.settings.devis_mentions       || 'Devis valable 30 jours.',
+      teams:                D.settings.teams                || [],
+      categories:           D.settings.categories           || ['Matériaux','Consommable','Outillage'],
+      accent_color:         D.settings.accent_color         || '#C0622A',
+      metrics:              D.settings.metrics              || [],
+      // Champs v11 — assurances BTP
+      assurance_decennale:  D.settings.assurance_decennale  || '',
+      rcp:                  D.settings.rcp                  || '',
+      qualibat:             D.settings.qualibat             || '',
     };
     // Colonnes optionnelles qui peuvent manquer selon la version du schéma
     // Retirer dynamiquement la colonne mentionnée dans l'erreur et réessayer
@@ -2311,19 +2713,59 @@ async function saveSetting(){
       r = await SB.from('settings').upsert(payload, {onConflict:'user_id'});
     }
     hideSync();
-    if (r.error) { toast('Erreur sauvegarde : '+(r.error.message||r.error.code||'inconnue'),'error'); }
-    else { const sc=$('sidebar-company'); if(sc) sc.textContent=D.settings.company||'Mon Entreprise'; toast('✅ Paramètres sauvegardés'); }
+    if (r.error) {
+      var errMsg = r.error.message || r.error.code || 'inconnue';
+      // Erreur colonne manquante = schema DB pas migré → message actionnable
+      if (r.error.code === 'PGRST204' || errMsg.includes('column')) {
+        toast('⚠️ Erreur schéma DB — exécutez batipilot_schema_v11.sql sur votre Supabase', 'error');
+      } else {
+        toast('Erreur sauvegarde : ' + errMsg, 'error');
+      }
+    } else {
+      const sc = $('sidebar-company');
+      if(sc) sc.textContent = D.settings.company || 'Mon Entreprise';
+      toast('✅ Paramètres sauvegardés');
+    }
   } catch(e) { toast('Erreur sauvegarde : '+e.message,'error'); hideSync(); }
 }
 
-async function insert(table,row){showSync();try{const{data,error}=await SB.from(table).insert({...row,user_id:USER.id}).select().single();hideSync();if(error){toast('Erreur : '+error.message,'error');return null;}return data;}catch(e){hideSync();toast('Erreur réseau : '+e.message,'error');return null;}}
-async function del(table,id){showSync();try{const{error}=await SB.from(table).delete().eq('id',id).eq('user_id',USER.id);hideSync();if(error){toast('Erreur de suppression : '+error.message,'error');}}catch(e){hideSync();toast('Erreur réseau : '+e.message,'error');}}
-async function upsert(table,row){
+async function insert(table, row) {
+  // SÉCURITÉ : toujours forcer user_id = USER.id (défense en profondeur, RLS + JS)
+  if (!USER || !USER.id) { toast('Session expirée — reconnectez-vous', 'error'); return null; }
+  if (typeof _readOnlyMode !== 'undefined' && _readOnlyMode) {
+    toast('🔒 Mode lecture seule — abonnement requis pour créer des données', 'error');
+    return null;
+  }
   showSync();
   try {
-    const {error} = await SB.from(table).upsert({...row, user_id:USER.id});
+    const safeRow = {...row, user_id: USER.id}; // écrase tout user_id fourni en param
+    const {data, error} = await SB.from(table).insert(safeRow).select().single();
     hideSync();
-    if (error) { toast('Erreur sauvegarde : '+error.message, 'error'); return false; }
+    if (error) { toast('Erreur : ' + error.message, 'error'); return null; }
+    return data;
+  } catch(e) { hideSync(); toast('Erreur réseau : ' + e.message, 'error'); return null; }
+}
+async function del(table, id) {
+  if (!USER || !USER.id) { toast('Session expirée — reconnectez-vous', 'error'); return; }
+  showSync();
+  try {
+    // Double guard : .eq('user_id', USER.id) en plus du RLS
+    const {error} = await SB.from(table).delete().eq('id', id).eq('user_id', USER.id);
+    hideSync();
+    if (error) { toast('Erreur de suppression : ' + error.message, 'error'); }
+  } catch(e) { hideSync(); toast('Erreur réseau : ' + e.message, 'error'); }
+}
+async function upsert(table, row) {
+  if (!USER || !USER.id) { toast('Session expirée — reconnectez-vous', 'error'); return false; }
+  if (typeof _readOnlyMode !== 'undefined' && _readOnlyMode) {
+    toast('🔒 Mode lecture seule — abonnement requis', 'error');
+    return false;
+  }
+  showSync();
+  try {
+    const {error} = await SB.from(table).upsert({...row, user_id: USER.id});
+    hideSync();
+    if (error) { toast('Erreur sauvegarde : ' + error.message, 'error'); return false; }
     return true;
   } catch(e) { hideSync(); toast('Erreur réseau : '+e.message, 'error'); return false; }
 }
@@ -2378,7 +2820,11 @@ async function obFinish(){
     teams:OB.teams,
     categories:OB.cats.length?OB.cats:['Matériaux','Consommable','Outillage'],
     accent_color:'#C0622A',
-    metrics:OB.metrics.map(m=>({label:(m.label||'').trim(),unit:(m.unit||'').trim()})).filter(m=>m.label)
+    metrics:OB.metrics.map(m=>({label:(m.label||'').trim(),unit:(m.unit||'').trim()})).filter(m=>m.label),
+    // Champs v11
+    assurance_decennale:'',
+    rcp:'',
+    qualibat:'',
   };
   await saveSetting();
   $('onboarding').style.display='none';
@@ -2410,7 +2856,65 @@ function closeMobileSidebar(){
   document.body.style.overflow = '';
 }
 
+// ── RESTRICTIONS UI SELON LE RÔLE ───────────────────────────────────────────
+// Pages financières réservées au patron. Si un conducteur tente d'y accéder
+// (console, URL hash, etc.), on le redirige vers le tableau de bord conducteur.
+// ── Rôle courant — déclaré explicitement ────────────────────────────────────
+// Valeur initiale 'conducteur' (le rôle le plus restrictif).
+// Mis à jour par launchApp() après vérification serveur.
+// Même si _USER_ROLE = 'owner' est exécuté en console,
+// chaque requête Supabase est bloquée côté RLS côté serveur.
+var _USER_ROLE = 'conducteur';
+
+// _log : alias interne → no-op en production, console en dev
+var _log = function() { if (window._bpLog) window._bpLog.apply(null, arguments); };
+
+// La vraie barrière est côté RLS Supabase — ceci est la protection UI.
+var _OWNER_ONLY_PAGES = ['finances', 'facturation', 'salaires', 'abonnement', 'logs', 'rgpd', 'legal'];
+
+function applyRoleRestrictions() {
+  if (_USER_ROLE === 'owner') return; // Patron : pas de restriction
+
+  // Masquer le bouton "Bureau" dans le switcher de mode
+  var btnPatron = document.getElementById('mode-patron');
+  if (btnPatron) {
+    btnPatron.style.display = 'none';
+    btnPatron.disabled = true;
+    btnPatron.setAttribute('aria-hidden', 'true');
+  }
+
+  // Masquer les items de navigation réservés au patron
+  var patronNavItems = ['abonnement', 'finances', 'facturation', 'salaires', 'logs'];
+  patronNavItems.forEach(function(page) {
+    // Sélectionner tous les nav-items qui appellent go('page')
+    document.querySelectorAll('[onclick*="go(\'' + page + '\'"]').forEach(function(el) {
+      el.style.display = 'none';
+    });
+  });
+
+  // Ajouter un badge "Mode Conducteur" dans la sidebar
+  var sidebarCompany = document.getElementById('sidebar-company');
+  if (sidebarCompany && !document.getElementById('conductor-badge')) {
+    var badge = document.createElement('div');
+    badge.id = 'conductor-badge';
+    badge.style.cssText = 'background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;'
+      + 'text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border-radius:20px;'
+      + 'margin-top:4px;display:inline-block';
+    badge.textContent = '🦺 Mode Conducteur';
+    sidebarCompany.parentNode && sidebarCompany.parentNode.insertBefore(badge, sidebarCompany.nextSibling);
+  }
+}
+
 function go(page){
+  // ── Garde de rôle sur les pages sensibles ─────────────────────────────────
+  // Même si quelqu'un appelle go('finances') depuis la console DevTools,
+  // le conducteur est redirigé. Les données seraient de toute façon vides
+  // (bloquées par RLS), mais on évite d'afficher une interface confuse.
+  if (_USER_ROLE !== 'owner' && _OWNER_ONLY_PAGES.indexOf(page) >= 0) {
+    toast('⛔ Cette section est réservée au propriétaire du compte.', 'error');
+    page = 'dashboard'; // Rediriger vers le dashboard (données conducteur)
+  }
+
   D.page=page;
   // Cache minimal : ne pas re-rendre si même page ET même données
   if(page === _lastRenderedPage && D._renderTs && (Date.now()-D._renderTs) < 500){
@@ -2422,8 +2926,28 @@ function go(page){
   closeMobileSidebar();
   $('topbar-title').textContent=PAGE_TITLES[page]||page;
   $('t-sec').style.display=$('t-pri').style.display='none';
+
+  // ── Scroll reset au changement de page (UX mobile) ──────────────────
+  var contentEl = document.getElementById('content');
+  if (contentEl) contentEl.scrollTop = 0;
+  window.scrollTo(0, 0);
+
   const pages={dashboard:pgDashboardPro,chantiers:pgChantiers,devis:pgDevis,appro:pgAppro,stock:pgStock,clients:pgClients,planning:pgPlanning,finances:pgFinances,salaires:pgSalaires,facturation:pgFacturation,abonnement:pgAbonnement,settings:pgSettings,conducteur:pgConducteur,rgpd:pgRGPD,legal:pgLegal,logs:pgActivityLog};
+  window._currentPage = page;
   if(pages[page])pages[page]();
+
+  // ── Vérifier l'abonnement à chaque navigation (P2 audit) ─────────────
+  // Pages sensibles uniquement (pas dashboard, settings, rgpd, legal)
+  var _sensitivePages = ['chantiers','devis','appro','stock','clients','planning','finances','salaires','facturation'];
+  if (_sensitivePages.includes(page)) {
+    // Vérification légère et synchrone — checkPaywall lit D.settings local
+    checkPaywall();
+  }
+
+  // Appliquer le mode lecture seule sur chaque nouvelle page si abonnement expiré
+  if (typeof _readOnlyMode !== 'undefined' && _readOnlyMode) {
+    setTimeout(function(){ _disableWriteButtons(true); }, 120);
+  }
   updateMobileNav(page);
   closeMobDrawer();
   // Event delegation pour dashboard
@@ -2510,12 +3034,7 @@ function pgDashboard(){
 
   setContent(
     // KPIs
-    '<div class="kpi-grid">'
-      +'<div class="kpi-card"><div class="kpi-icon">🚧</div><div class="kpi-label">En cours</div><div class="kpi-value">'+enCours+'</div><div class="kpi-sub">'+ch.length+' total</div></div>'
-      +'<div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-label">Terminés</div><div class="kpi-value">'+termines+'</div></div>'
-      +'<div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:20px">'+eur(ca)+'</div></div>'
-      +'<div class="kpi-card '+(mr>=20?'green':mr>=10?'orange':'red')+'"><div class="kpi-icon">📊</div><div class="kpi-label">Marge brute</div><div class="kpi-value" style="font-size:20px">'+eur(marge)+'</div><div class="kpi-sub">'+mr+'%</div></div>'
-      +(devisEnAttente?'<div class="kpi-card orange"><div class="kpi-icon">📋</div><div class="kpi-label">Devis en attente</div><div class="kpi-value">'+devisEnAttente+'</div><div class="kpi-sub">À relancer</div></div>':'')
+    '<div class="kpi-grid">'      +'<div class="kpi-card"><div class="kpi-icon">🚧</div><div class="kpi-label">En cours</div><div class="kpi-value">'+enCours+'</div><div class="kpi-sub">'+ch.length+' total</div></div>'      +'<div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-label">Terminés</div><div class="kpi-value">'+termines+'</div></div>'      +(_USER_ROLE === 'owner'        ? '<div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:20px">'+eur(ca)+'</div></div>'          +'<div class="kpi-card '+(mr>=20?'green':mr>=10?'orange':'red')+'"><div class="kpi-icon">📊</div><div class="kpi-label">Marge brute</div><div class="kpi-value" style="font-size:20px">'+eur(marge)+'</div><div class="kpi-sub">'+mr+'%</div></div>'        : '<div class="kpi-card" style="opacity:0.45"><div class="kpi-icon">💰</div><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:15px;color:var(--text-muted)">— Propriétaire</div></div>'          +'<div class="kpi-card" style="opacity:0.45"><div class="kpi-icon">📊</div><div class="kpi-label">Marge brute</div><div class="kpi-value" style="font-size:15px;color:var(--text-muted)">— Propriétaire</div></div>'      )      +(devisEnAttente?'<div class="kpi-card orange"><div class="kpi-icon">📋</div><div class="kpi-label">Devis en attente</div><div class="kpi-value">'+devisEnAttente+'</div><div class="kpi-sub">À relancer</div></div>':'')
       +'<div class="kpi-card orange"><div class="kpi-icon">📦</div><div class="kpi-label">Valeur Stock</div><div class="kpi-value" style="font-size:20px">'+eur(valStock)+'</div></div>'
     +'</div>'
     // Actions rapides (mobile uniquement)
@@ -2524,6 +3043,19 @@ function pgDashboard(){
     +'<div class="grid-2" style="gap:20px;align-items:start">'
       +'<div class="card"><div class="card-title">Chantiers récents</div>'+recentH+'</div>'
       +'<div class="card"><div class="card-title">⚠️ Alertes Stock ('+alertes.length+')</div>'+alertH+'</div>'
+    +'</div>'
+    // Trust + export rapide
+    +'<div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:12px;padding:14px 18px;margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
+      +'<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:220px">'
+        +'<span style="font-size:22px">🔒</span>'
+        +'<div><div style="font-size:13px;font-weight:700;color:#166534">Vos données vous appartiennent</div>'
+          +'<div style="font-size:12px;color:#4B7A5A;margin-top:1px">BatiPilot ne revend aucune donnée. Export complet disponible à tout moment.</div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +'<button class="btn btn-sm" style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;font-size:12px" onclick="exportCSVChantiers()">⬇️ Export Chantiers CSV</button>'
+        +'<button class="btn btn-sm" style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;font-size:12px" onclick="exportMesData()">⬇️ Export complet JSON</button>'
+        +'<button class="btn btn-sm" style="background:none;color:#4B7A5A;border:1px solid #86EFAC;font-size:12px" onclick="go(\'rgpd\')">Politique données →</button>'
+      +'</div>'
     +'</div>'
   );
 }
@@ -3420,10 +3952,19 @@ function pgAbonnement(){
   `);
 }
 
-function openStripe(plan){
-  // Ici vous intégrerez votre lien Stripe Payment Link
-  // Exemple: window.open('https://buy.stripe.com/votre_lien_'+plan, '_blank', 'noopener,noreferrer');
-  modal('💳 Paiement',`<div class="alert alert-info mb-4"><span>ℹ️</span>Pour activer le paiement, connectez votre compte Stripe et ajoutez vos liens de paiement dans le code.</div><div style="text-align:center;padding:20px"><div style="font-size:48px;margin-bottom:16px">🏗️</div><div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:8px">Configuration Stripe requise</div><div class="text-muted">Créez un compte sur <a href="https://stripe.com" target="_blank" style="color:var(--accent)">stripe.com</a>, créez un Payment Link pour le plan <strong>${plan}</strong>, puis remplacez l'URL dans la fonction <code>openStripe()</code> du code.</div></div>`,`<button class="btn btn-primary" onclick="closeModal()">Compris</button>`);
+function openStripe(plan) {
+  var link = STRIPE_LINKS[plan];
+  if (!link || link.includes('REMPLACER')) {
+    toast('🔧 Lien Stripe non configuré — mettez à jour STRIPE_LINKS dans le code', 'error');
+    return;
+  }
+  // Passer l'email utilisateur en prefill Stripe si disponible
+  var email = (USER && USER.email) ? ('?prefilled_email=' + encodeURIComponent(USER.email)) : '';
+  window.open(link + email, '_blank', 'noopener,noreferrer');
+  // Montrer un message d'attente pendant que Stripe traite
+  toast('🔄 Redirection vers le paiement sécurisé Stripe...', 'info');
+  // Vérification automatique après retour (polling léger 30s)
+  setTimeout(function() { checkSubscriptionStatus(true); }, 30000);
 }
 
 // ── PARAMÈTRES ────────────────────────────────────
@@ -3471,6 +4012,14 @@ function pgSettings(){
       <button class="btn btn-primary w-full" onclick="saveDevisSettings()">💾 Enregistrer</button>
     </div>
     <div class="card mb-4">
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">🛡️ Assurances & Qualifications BTP</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">Ces informations apparaissent sur vos devis. L'assurance décennale est <strong>obligatoire</strong> sur tout devis de construction.</div>
+      <div class="form-group"><label>Assurance Décennale <span style="color:var(--danger);font-size:11px">obligatoire</span></label><input id="s-assur-dec" value="${s.assurance_decennale||''}" placeholder="Ex : AXA — Police n° 12345678"></div>
+      <div class="form-group"><label>RC Professionnelle (RCP)</label><input id="s-rcp" value="${s.rcp||''}" placeholder="Ex : MAAF Pro — Police n° 87654321"></div>
+      <div class="form-group"><label>Qualification (Qualibat / RGE / Qualifelec…)</label><input id="s-qualibat" value="${s.qualibat||''}" placeholder="Ex : Qualibat 7141 — Isolation thermique"></div>
+      <button class="btn btn-primary w-full" onclick="saveAssuranceSettings()">💾 Enregistrer</button>
+    </div>
+    <div class="card mb-4">
       <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">📐 Métriques de chantier</div>
       <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Ces indicateurs apparaîtront dans chaque fiche chantier et sur le bon d'intervention.</div>
       ${mH}
@@ -3496,19 +4045,32 @@ function pgSettings(){
   </div></div>`);
 }
 async function saveCmpSettings(){
-  D.settings.company=$('s-cmp').value.trim();
-  D.settings.trade=$('s-trd').value.trim();
-  D.settings.phone=$('s-ph').value.trim();
-  D.settings.email=$('s-em').value.trim();
-  D.settings.adresse=$('s-adr').value.trim();
-  D.settings.siret=$('s-sir').value.trim();
-  D.settings.tva_num=($('s-tva-num')?$('s-tva-num').value.trim():'');
-  D.settings.logo=$('s-logo').value.trim();
-  D.settings.tva=+$('s-tva').value||20;
+  D.settings.company = $('s-cmp').value.trim();
+  D.settings.trade   = $('s-trd').value.trim();
+  D.settings.phone   = $('s-ph').value.trim();
+  D.settings.email   = $('s-em').value.trim();
+  D.settings.adresse = $('s-adr').value.trim();
+  D.settings.siret   = $('s-sir').value.trim();
+  D.settings.tva_num = ($('s-tva-num') ? $('s-tva-num').value.trim() : '');
+  D.settings.logo    = $('s-logo').value.trim();
+  D.settings.tva     = +$('s-tva').value || 20;
   applyAccent();
   await saveSetting();
-  $('sidebar-company').textContent=D.settings.company;
-  toast('Paramètres sauvegardés !');
+  var sc = document.getElementById('sidebar-company');
+  if (sc) sc.textContent = D.settings.company;
+  // Avertissement CNIL si champs obligatoires manquants
+  if (!D.settings.company || !D.settings.siret) {
+    toast('⚠️ SIRET requis pour la conformité CNIL — pensez à le renseigner', 'error');
+  } else {
+    toast('Paramètres sauvegardés !');
+  }
+}
+async function saveAssuranceSettings(){
+  D.settings.assurance_decennale = ($('s-assur-dec')||{value:''}).value.trim();
+  D.settings.rcp                 = ($('s-rcp')||{value:''}).value.trim();
+  D.settings.qualibat            = ($('s-qualibat')||{value:''}).value.trim();
+  await saveSetting();
+  toast('Assurances sauvegardées !');
 }
 async function saveDevisSettings(){
   D.settings.website=($('s-web')?$('s-web').value.trim():'');
@@ -3689,6 +4251,11 @@ function buildDevisHTML(dvId){
       +'</div>'
     +'</div>'
 
+    // ── ASSURANCES & QUALIFICATIONS (obligatoires devis BTP) ──
+    +((s.assurance_decennale||s.rcp||s.qualibat)
+      ?'<div style="padding:12px 24px;background:#F0F7FF;border-top:1px solid #DBEAFE">'        +'<div style="font-size:8.5px;color:#1E40AF;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">Assurances professionnelles</div>'        +'<div style="font-size:9.5px;color:#334155;line-height:1.8">'          +(s.assurance_decennale?'<strong>Assurance décennale :</strong> '+s.assurance_decennale+'<br>':'')          +(s.rcp?'<strong>RC Professionnelle :</strong> '+s.rcp+'<br>':'')          +(s.qualibat?'<strong>Qualification :</strong> '+s.qualibat:'')
+        +'</div>'      +'</div>'
+      :'')
     // ── SIGNATURES ──
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px 24px;border-top:1px solid #eee">'
       +'<div style="border:1.5px dashed #ddd;border-radius:10px;padding:16px 18px;min-height:80px">'
@@ -3707,6 +4274,17 @@ function buildDevisHTML(dvId){
         +'<div style="font-size:10px;color:#999;line-height:1.7">'+dv.mentions+'</div>'
       +'</div>'
       :'')
+
+    // ── MENTIONS LÉGALES DEVIS ──────────────────────────────────────
+    +'<div style="padding:12px 24px;background:#FAFAFA;border-top:1px solid #eee">'
+      +'<div style="font-size:8.5px;color:#aaa;line-height:1.8">'
+        +'<strong style="color:#888;text-transform:uppercase;letter-spacing:0.3px">Conditions de règlement</strong> — '
+        +'En cas de retard de paiement : pénalités au taux BCE majoré de 10 points (Art. L441-10 C. com.) + indemnité forfaitaire de 40 € pour frais de recouvrement (Décret 2012-1115). '
+        +'Escompte pour règlement anticipé : néant.'
+        +(s.siret?' — SIRET : '+s.siret:'')
+        +(s.tva_num?' — TVA : '+s.tva_num:'')
+      +'</div>'
+    +'</div>'
 
     // ── PIED DE PAGE ──
     +'<div style="background:'+col+';padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
@@ -4264,9 +4842,8 @@ setTimeout(function() {
 }, 5000);
 
 async function startApp(user) {
-  console.log('[BP] startApp called, _appLoaded=', _appLoaded);
   // Guard strict : une seule tentative de boot à la fois
-  if (_appLoaded) { console.log('[BP] startApp: already loaded, skipping'); return; }
+  if (_appLoaded) { return; } // Guard: déjà initialisé
   _appLoaded = true;
   USER = user;
   // Masquer auth-screen et loader avant tout
@@ -4289,7 +4866,7 @@ async function startApp(user) {
     await loadAll();
     clearTimeout(bootTimeout);
   } catch(e) {
-    console.error('[BP] startApp ERROR:', e.message, e.stack);
+    console.error('[BatiPilot] startApp error:', e instanceof Error ? e.message : String(e));
     clearTimeout(bootTimeout);
     _appLoaded = false;
     showAuthScreen();
@@ -4338,9 +4915,17 @@ async function startApp(user) {
     }
 
     // 2. Cas normal : restaurer la session existante
-    const sessionPromise = SB.auth.getSession();
-    const sessionTimeout = new Promise((_,r)=>setTimeout(()=>r(new Error('session_timeout')),8000));
-    const { data: { session } } = await Promise.race([sessionPromise, sessionTimeout]);
+    // iOS Safari peut mettre quelques ms à rendre localStorage disponible
+    // → on retente une fois si la première lecture retourne null
+    async function getSessionWithRetry() {
+      const sessionTimeout = new Promise((_,r)=>setTimeout(()=>r(new Error('session_timeout')),8000));
+      const first = await Promise.race([SB.auth.getSession(), sessionTimeout]);
+      if (first.data?.session) return first;
+      // Retry après 400ms (iOS Safari localStorage timing)
+      await new Promise(r => setTimeout(r, 400));
+      return SB.auth.getSession();
+    }
+    const { data: { session } } = await getSessionWithRetry();
     _bootDone = true;
 
     if (session?.user) {
@@ -4365,7 +4950,7 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 window.addEventListener('appinstalled', () => {
   _pwaInstallPrompt = null;
-  toast('BatiPilot installé sur l’écran d’accueil ! ✅');
+  toast('BatiPilot install\u00e9 sur l\'\u00e9cran d\'accueil ! \u2705');
 });
 function installPWA() {
   if (_pwaInstallPrompt) {
@@ -4375,13 +4960,13 @@ function installPWA() {
       _pwaInstallPrompt = null;
     });
   } else {
-    var iosSteps = '1. Appuyez sur le bouton Partager dans Safari<br>2. Choisissez Ajouter sur l’écran d’accueil';
+    var iosSteps = '1. Appuyez sur le bouton Partager dans Safari<br>2. Choisissez Ajouter sur l\'\u00e9cran d\'accueil';
     modal('📱 Installer BatiPilot',
       '<div style="font-size:14px;line-height:1.8;color:var(--text-muted)">'
       + '<strong>Sur iPhone/iPad :</strong><br>' + iosSteps + '<br><br>'
       + '<strong>Sur Android :</strong><br>'
-      + 'Chrome affiche une bannière d’installation automatiquement.<br>'
-      + 'Ou : Menu ⋮ → Ajouter à l’écran d’accueil'
+      + 'Chrome affiche une banni\u00e8re d\'installation automatiquement.<br>'
+      + 'Ou : Menu \u22ee \u2192 Ajouter \u00e0 l\'\u00e9cran d\'accueil'
       + '</div>',
       '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>'
     );
@@ -4645,14 +5230,29 @@ const STRIPE_LINKS = {
 
 
 function openPortailStripe() {
-  // Stripe Customer Portal — permettre à l'utilisateur de gérer/résilier son abonnement
-  // Configurer l'URL du portail sur https://dashboard.stripe.com/settings/billing/portal
-  const portalUrl = 'https://billing.stripe.com/REMPLACER_PORTAIL';
-  if (portalUrl.includes('REMPLACER')) {
-    toast('Portail Stripe non configuré', 'error');
+  // ── À CONFIGURER ────────────────────────────────────────────────────────
+  // 1. Activer le portail sur https://dashboard.stripe.com/settings/billing/portal
+  // 2. Remplacer la valeur ci-dessous par votre URL de portail Stripe
+  // ────────────────────────────────────────────────────────────────────────
+  var STRIPE_PORTAL_URL = 'https://billing.stripe.com/REMPLACER_PORTAIL';
+
+  if (STRIPE_PORTAL_URL.includes('REMPLACER')) {
+    // Portail non encore configuré → proposer contact email comme fallback
+    modal('💳 Gérer mon abonnement',
+      '<div class="alert alert-warning"><span>ℹ️</span>'
+      + '<div>Le portail de facturation sera disponible prochainement.<br><br>'
+      + 'Pour modifier ou résilier votre abonnement, contactez-nous :<br>'
+      + '<a href="mailto:support@batipilot.fr" style="color:var(--accent);font-weight:600">support@batipilot.fr</a>'
+      + '</div></div>',
+      '<button class="btn btn-primary" onclick="closeModal()">Fermer</button>'
+    );
     return;
   }
-  window.open(portalUrl, '_blank', 'noopener,noreferrer');
+  // Passer l'email Stripe en paramètre pour pré-remplir
+  var urlWithEmail = USER && USER.email
+    ? STRIPE_PORTAL_URL + '?prefilled_email=' + encodeURIComponent(USER.email)
+    : STRIPE_PORTAL_URL;
+  window.open(urlWithEmail, '_blank', 'noopener,noreferrer');
 }
 
 
@@ -4665,18 +5265,25 @@ async function exportMesData() {
   loader('Export de vos données...');
   try {
     // Rassembler toutes les données de l'utilisateur
+    // Charger d'abord les données lazy si absentes
+    if (!D.employees || D.employees.length === 0) await loadLazyData();
     const exportObj = {
-      export_date: new Date().toISOString(),
-      compte: { id: USER.id, email: USER.email },
-      settings: D.settings,
-      chantiers: D.chantiers,
-      clients: D.clients,
-      devis: D.devis_docs,
-      factures: D.factures,
-      stocks: D.stocks,
-      materiaux: D.materiaux,
-      bl_items: D.bl_items || [],
-      notes: D.notes_chantier || [],
+      export_date:    new Date().toISOString(),
+      version:        'BatiPilot v11',
+      compte:         { id: USER.id, email: USER.email },
+      settings:       D.settings,
+      chantiers:      D.chantiers,
+      clients:        D.clients,
+      devis:          D.devis_docs,
+      factures:       D.factures,
+      factures_client:D.factures_client || [],
+      stocks:         D.stocks,
+      materiaux:      D.materiaux,
+      mouvements:     D.mouvements     || [],
+      bl_items:       D.bl_items       || [],
+      notes:          D.notes_chantier || [],
+      employees:      D.employees      || [],   // ← ajouté v11
+      time_entries:   D.time_entries   || [],   // ← ajouté v11
     };
     const json = JSON.stringify(exportObj, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -4718,20 +5325,51 @@ function _checkAndDeleteAccount() {
 async function _execSupprimerCompte() {
   loader('Suppression de vos données...');
   try {
-    // Supprimer toutes les tables en cascade (RLS + CASCADE définis dans le schema)
-    const tables = ['bl_items','ct_docs','notes_chantier','conducteur_pins',
-                    'mouvements','factures','devis_docs','materiaux',
-                    'stocks','chantiers','clients','settings'];
+    // ── 1. Supprimer toutes les tables métier (ordre FK safe) ───────────────
+    const tables = [
+      'time_entries',    // ← v11 : ajouté
+      'employees',       // ← v11 : ajouté
+      'bl_items', 'ct_docs', 'notes_chantier', 'conducteur_pins',
+      'mouvements', 'factures_client', 'factures', 'devis_docs',
+      'materiaux', 'stocks', 'chantiers', 'clients',
+      'activity_log',   // ← v11 : ajouté
+      'settings',       // en dernier (FK vers auth.users)
+    ];
     for (const t of tables) {
-      await SB.from(t).delete().eq('user_id', USER.id);
+      try { await SB.from(t).delete().eq('user_id', USER.id); }
+      catch(tableErr) { /* table optionnelle ou déjà vide */ }
     }
-    // Déconnecter
-    await SB.auth.signOut();
+
+    // ── 2. Supprimer le compte auth.users via Edge Function (RGPD Art.17) ──
+    // L'API auth.admin.deleteUser() nécessite service_role, non dispo côté client.
+    // Une Edge Function Supabase "delete-account" est appelée avec le JWT de l'utilisateur.
+    var supabaseUrl   = SB.supabaseUrl || '';
+    var functionUrl   = supabaseUrl.replace('/rest/v1','') + '/functions/v1/delete-account';
+    var session       = (await SB.auth.getSession()).data.session;
+    var accessToken   = session ? session.access_token : '';
+
+    var efResp = null;
+    if (accessToken && functionUrl.includes('supabase')) {
+      try {
+        efResp = await fetch(functionUrl, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: USER.id })
+        });
+      } catch(efErr) { /* Edge Function non déployée — compte data supprimé mais auth.users reste */ }
+    }
+
+    // ── 3. Déconnecter dans tous les cas ────────────────────────────────────
+    await SB.auth.signOut({ scope: 'global' });
     hideLoader();
-    toast('Compte supprimé. Au revoir !'); setTimeout(()=>location.reload(), 2000);
+    var authDeleted = efResp && efResp.ok;
+    toast(authDeleted
+      ? '✅ Compte supprimé définitivement. Au revoir !'
+      : '✅ Données supprimées. Le compte de connexion sera effacé sous 72h. Au revoir !');
+    setTimeout(function(){ location.replace(location.origin + location.pathname); }, 2500);
   } catch(e) {
     hideLoader();
-    toast('Erreur : ' + e.message + ' — Contactez <template class="__cf_email__" data-cfemail="1b686e6b6b74696f5b797a6f726b7277746f357d69">[email&#160;protected]</template>', 'error');
+    toast('Erreur suppression : ' + e.message + ' — Contactez le support.', 'error');
   }
 }
 
@@ -4768,59 +5406,86 @@ function exportCSVDevis() {
 }
 
 function pgRGPD() {
+  var s = D.settings;
+  // ── Identité responsable du traitement (depuis les paramètres remplis) ──
+  var responsable = s.company || '';
+  var siretLine   = s.siret   ? 'SIRET : ' + s.siret : '';
+  var adresseLine = s.adresse || '';
+  var emailDpo    = s.email   || '';
+  var incomplete  = !s.company || !s.siret || !s.adresse;
+  var warningBanner = incomplete
+    ? '<div class="alert alert-warning" style="margin-bottom:12px"><span>⚠️</span>'
+      + '<div style="font-size:13px"><strong>Politique incomplète</strong><br>'
+      + 'Complétez votre <strong>Nom société</strong>, <strong>SIRET</strong> et <strong>Adresse</strong> '
+      + 'dans <a href="#" onclick="go(\"settings\")" style="color:var(--accent)">Paramètres</a> '
+      + 'pour finaliser votre politique de confidentialité conforme CNIL.</div></div>'
+    : '';
+
+  var identiteBlock = responsable
+    ? '<strong>' + responsable + '</strong>'
+      + (siretLine   ? '<br>' + siretLine   : '')
+      + (adresseLine ? '<br>' + adresseLine : '')
+      + (emailDpo    ? '<br>Contact : ' + emailDpo : '')
+    : '<em style="color:var(--danger)">⚠️ Non renseigné — allez dans Paramètres</em>';
+
   setContent(
     '<div class="page-header"><div class="page-title">Données & Confidentialité</div></div>'
     + '<div class="grid-2" style="align-items:start;gap:20px">'
 
-    // Bloc export
+    // ── Bloc export (+ employees/time_entries inclus) ──
     + '<div class="card">'
-      + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">📦 Mes données</div>'
-      + '<p style="font-size:13.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">'
-        + 'En vertu du RGPD, vous avez le droit d\'accéder à toutes vos données personnelles '
-        + 'et de les récupérer dans un format lisible.'
+      + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">📦 Mes données (Art. 20 RGPD)</div>'
+      + '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">'
+        + 'Exportez <strong>l\'intégralité</strong> de vos données personnelles dans un format lisible et portable.'
       + '</p>'
-      + '<button class="btn btn-secondary w-full" onclick="exportMesData()" style="margin-bottom:8px">⬇️ Tout exporter (JSON complet)</button>'
-      + '<button class="btn btn-ghost w-full" onclick="exportCSVChantiers()" style="margin-bottom:6px">📊 Export chantiers (CSV Excel)</button>'
-      + '<button class="btn btn-ghost w-full" onclick="exportCSVDevis()">📋 Export devis (CSV Excel)</button>'
+      + '<button class="btn btn-secondary w-full" onclick="exportMesData()" style="margin-bottom:8px">⬇️ Export complet JSON (toutes tables)</button>'
+      + '<button class="btn btn-ghost w-full" onclick="exportCSVChantiers()" style="margin-bottom:6px">📊 Chantiers CSV</button>'
+      + '<button class="btn btn-ghost w-full" onclick="exportCSVDevis()" style="margin-bottom:6px">📋 Devis CSV</button>'
+      + '<button class="btn btn-ghost w-full" onclick="exportCSVFacturesClient()">🧾 Factures CSV</button>'
     + '</div>'
 
-    // Bloc politique
+    // ── Politique de confidentialité dynamique (CNIL) ──
     + '<div class="card">'
       + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">📄 Politique de confidentialité</div>'
-      + '<div style="font-size:13px;color:var(--text-muted);line-height:1.8">'
-        + '<strong>Responsable du traitement :</strong> [Votre société, SIRET, adresse]<br>'
-        + '<strong>Données collectées :</strong> Email, données de chantiers, photos de bons<br>'
-        + '<strong>Finalité :</strong> Gestion de chantiers BTP, facturation<br>'
-        + '<strong>Hébergement :</strong> Supabase (EU – Francfort)<br>'
-        + '<strong>Durée de conservation :</strong> Durée de l\'abonnement + 3 ans légaux<br>'
-        + '<strong>Droits :</strong> Accès, rectification, effacement, portabilité<br>'
-        + '<strong>Contact DPO :</strong> <a href="/cdn-cgi/l/email-protection#5034203f103231243920393c3f247e3622"><template class="__cf_email__" data-cfemail="5a3e2a351a383b2e332a3336352e743c28">[email&#160;protected]</template></a>'
+      + warningBanner
+      + '<div style="font-size:12.5px;color:var(--text-muted);line-height:2">'
+        + '<strong>Responsable du traitement :</strong><br>'
+        + '<div style="margin-left:12px;margin-bottom:8px;font-size:12px;line-height:1.7">' + identiteBlock + '</div>'
+        + '<strong>Données collectées :</strong> email, données de chantiers, clients, photos de bons de commande<br>'
+        + '<strong>Finalité :</strong> Gestion de chantiers BTP, facturation, suivi de chantier<br>'
+        + '<strong>Base légale :</strong> Exécution du contrat (Art. 6.1.b RGPD)<br>'
+        + '<strong>Hébergement :</strong> Supabase Inc. — AWS EU-Central-1 (Francfort, Allemagne) — conforme RGPD<br>'
+        + '<strong>Sous-traitants :</strong> Supabase (BDD), Stripe (paiement), GitHub Pages (hébergement)<br>'
+        + '<strong>Durée de conservation :</strong> Durée de l\'abonnement actif + 3 ans (obligations légales comptables)<br>'
+        + '<strong>Droits :</strong> Accès · Rectification · Effacement · Portabilité · Opposition (Art. 15-21 RGPD)<br>'
+        + '<strong>Contact DPO :</strong> ' + (emailDpo || '<em>Renseignez votre email dans Paramètres</em>')
       + '</div>'
     + '</div>'
 
-    // Bloc suppression
+    // ── Suppression du compte ──
     + '<div class="card" style="border:1px solid var(--danger-soft)">'
-      + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--danger);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--danger-soft)">🗑️ Suppression du compte</div>'
-      + '<p style="font-size:13.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">'
-        + '<strong>Action irréversible.</strong> Toutes vos données (chantiers, devis, clients, photos, stock) '
-        + 'seront définitivement effacées. Pensez à télécharger vos données avant.'
+      + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--danger);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--danger-soft)">🗑️ Supprimer mon compte (Art. 17 RGPD)</div>'
+      + '<p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;line-height:1.7">'
+        + '<strong>Action irréversible.</strong> Chantiers, devis, clients, photos, stock et compte de connexion '
+        + 'seront définitivement supprimés. Exportez vos données avant.'
       + '</p>'
+      + '<div class="alert alert-warning" style="margin-bottom:12px"><span>ℹ️</span>'
+        + '<div style="font-size:12px">Le droit à l\'effacement est traité sous <strong>72h ouvrées</strong> '
+        + 'conformément à l\'Art. 17 RGPD. Vos factures émises restent archivées 10 ans '
+        + '(obligation comptable légale, Art. L123-22 Code de commerce).</div>'
+      + '</div>'
       + '<button class="btn btn-danger w-full" onclick="supprimerMonCompte()" '
         + 'style="background:var(--danger);color:white;border-color:var(--danger)">Supprimer définitivement mon compte</button>'
     + '</div>'
 
-    // Bloc abonnement
+    // ── Portail abonnement Stripe ──
     + '<div class="card">'
-      + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">💳 Gérer mon abonnement</div>'
-      + '<p style="font-size:13.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">'
-        + 'Gérez vos factures, modifiez ou résiliez votre abonnement via le portail Stripe sécurisé.'
+      + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">💳 Mon abonnement</div>'
+      + '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">'
+        + 'Consultez vos factures, modifiez votre plan ou résiliez sans engagement.'
       + '</p>'
-      + '<button class="btn btn-secondary w-full" onclick="openPortailStripe()">🔗 Portail de facturation Stripe</button>'
-    + '</div>'
-
-    + '<div class="card" style="margin-top:4px">'
-      + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">📄 Consultez nos conditions légales complètes :</div>'
-      + '<button class="btn btn-ghost w-full" onclick="go(\'legal\')">📄 CGV & Mentions légales</button>'
+      + '<button class="btn btn-secondary w-full" style="margin-bottom:8px" onclick="openPortailStripe()">🔗 Portail de facturation Stripe</button>'
+      + '<button class="btn btn-ghost w-full" onclick=\"go(&quot;legal&quot;)\">📄 CGV & Mentions légales</button>'
     + '</div>'
 
     + '</div>'
@@ -5307,9 +5972,27 @@ function buildFactureHTML(fcId) {
     + '</div>'
 
     // Pied de page
-    + '<div style="background:' + col + ';padding:14px 32px;display:flex;justify-content:space-between;align-items:center;margin-top:20px">'
-      + '<span style="color:rgba(255,255,255,0.7);font-size:11px">' + (s.company||'') + ' · ' + (s.phone||'') + ' · ' + (s.email||'') + '</span>'
-      + '<span style="color:rgba(255,255,255,0.35);font-size:10px">BatiPilot</span>'
+    // ── MENTIONS LÉGALES OBLIGATOIRES ──────────────────────────────────
+    // Art. L441-9 & L441-10 Code de commerce — obligatoires sur toute facture B2B
+    + '<div style="border-top:2px solid #F0F0F0;margin:0;padding:14px 32px">'
+      + '<div style="font-size:8.5px;color:#999;line-height:1.85;font-family:Arial,sans-serif">'
+        + '<strong style="color:#666;font-size:8.5px;text-transform:uppercase;letter-spacing:0.5px">Conditions de paiement &amp; mentions légales</strong><br>'
+        + 'Pénalités de retard : en cas de retard de paiement, des pénalités de retard au taux BCE (taux de refinancement) '
+        + 'majoré de <strong>10 points de pourcentage</strong> sont exigibles de plein droit, sans mise en demeure préalable '
+        + '(Art. L441-10 al. 1 du Code de commerce).<br>'
+        + 'Indemnité forfaitaire de recouvrement : toute somme non réglée à l\'échéance entraîne de plein droit l\'application '
+        + 'd\'une <strong>indemnité forfaitaire de 40 € pour frais de recouvrement</strong> '
+        + '(Art. L441-10 al. 4 du Code de commerce — Décret n° 2012-1115 du 02/10/2012).<br>'
+        + 'Escompte pour règlement anticipé : <strong>néant</strong> — aucun escompte accordé pour paiement avant échéance.'
+        + (s.siret ? ' — SIRET : ' + s.siret : '')
+        + (s.tva_num ? ' — N° TVA intracommunautaire : ' + s.tva_num : '')
+      + '</div>'
+    + '</div>'
+
+    // ── PIED DE PAGE COLORÉ ──────────────────────────────────────────
+    + '<div style="background:' + col + ';padding:12px 32px;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="color:rgba(255,255,255,0.7);font-size:10.5px">' + (s.company||'') + (s.phone ? ' · ' + s.phone : '') + (s.email ? ' · ' + s.email : '') + '</span>'
+      + '<span style="color:rgba(255,255,255,0.35);font-size:9.5px">BatiPilot</span>'
     + '</div>'
     + '</div></bo'+'dy></ht'+'ml>';
 
@@ -5648,15 +6331,42 @@ function initOfflineSupport() {
 
   updateOfflineIndicator();
 
-  // Enregistrer le Service Worker
-  if ('serviceWorker' in navigator) {
-    // Service Worker inline via Blob URL
-    var swCode = getServiceWorkerCode();
-    var blob = new Blob([swCode], {type: 'application/javascript'});
-    var swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).then(function(reg) {
-          }).catch(function(e) {
+  // ── ENREGISTREMENT SERVICE WORKER (/sw.js commité dans le repo) ──
+  // Ne plus utiliser Blob URL (bloqué par CSP sur GitHub Pages)
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    // sw.js DOIT exister physiquement à la racine du repo (même dossier que index.html)
+    var swBase = location.pathname.split('/').slice(0, -1).join('/') || '';
+    var swPath = swBase + '/sw.js';
+
+    navigator.serviceWorker.register(swPath, { scope: swBase + '/' })
+      .then(function(reg) {
+        // Notifier l'utilisateur quand une nouvelle version est disponible
+        reg.addEventListener('updatefound', function() {
+          var newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              toast('🆕 Mise à jour disponible — rechargez pour l\'activer');
+            }
           });
+        });
+      })
+      .catch(function(err) {
+        // 404 = sw.js manquant dans le repo → offline cache désactivé
+        // L'app reste fonctionnelle, la file IndexedDB continue de marcher
+        if (err.message && (err.message.includes('404') || err.message.includes('fetch'))) {
+          console.warn('[BatiPilot] sw.js introuvable — copiez sw.js à la racine du repo GitHub Pages. Mode offline cache désactivé (file d\'attente IndexedDB toujours active).');
+        } else {
+          console.warn('[BatiPilot] SW non enregistré :', err.message);
+        }
+      });
+
+    // Messages du SW (CACHE_CLEARED après mise à jour)
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'CACHE_CLEARED') {
+        toast('🗑️ Cache vidé — dernière version chargée');
+      }
+    });
   }
 }
 
@@ -5722,8 +6432,9 @@ function dbTransaction(storeName, mode, fn) {
 }
 
 function addToSyncQueue(action) {
-  action.id = action.id || uid();
-  action.ts = Date.now();
+  action.id         = action.id || uid();
+  action.ts         = Date.now();
+  action.queued_at  = new Date().toISOString(); // Pour la résolution de conflits offline
   _syncQueue.push(action);
   dbTransaction('sync_queue', 'readwrite', function(store){ return store.put(action); });
   updateOfflineIndicator();
@@ -5747,6 +6458,7 @@ function loadOfflineQueue() {
 async function syncOfflineQueue() {
   if (_syncInProgress || _syncQueue.length === 0 || !_isOnline) return;
   _syncInProgress = true;
+  showSync();
   updateOfflineIndicator();
 
   var toProcess = _syncQueue.slice();
@@ -5759,7 +6471,35 @@ async function syncOfflineQueue() {
       if (action.op === 'insert') {
         res = await SB.from(action.table).insert(action.data).select().single();
       } else if (action.op === 'update') {
-        res = await SB.from(action.table).update(action.data).eq('id', action.data.id).eq('user_id', USER.id);
+        // ── Résolution de conflit offline (P2 audit) ────────────────────
+        // Si l'action a été créée avant la dernière version serveur → conflit
+        // On vérifie updated_at serveur avant d'écraser
+        var conflictDetected = false;
+        if (action.queued_at && action.data && action.data.id) {
+          try {
+            var serverCheck = await SB.from(action.table)
+              .select('updated_at')
+              .eq('id', action.data.id)
+              .eq('user_id', USER.id)
+              .maybeSingle();
+            if (serverCheck.data && serverCheck.data.updated_at) {
+              var serverTime  = new Date(serverCheck.data.updated_at).getTime();
+              var queuedTime  = new Date(action.queued_at).getTime();
+              if (serverTime > queuedTime + 5000) { // 5s de tolérance
+                // Version serveur plus récente → signaler le conflit, skip
+                conflictDetected = true;
+                toast('⚠️ Conflit de données : ' + (action.table||'') + ' mis à jour depuis un autre appareil', 'error');
+              }
+            }
+          } catch(checkErr) { /* silencieux — procéder à la mise à jour */ }
+        }
+        if (!conflictDetected) {
+          // Forcer updated_at côté client pour les triggers DB
+          var updateData = Object.assign({}, action.data, { updated_at: new Date().toISOString() });
+          res = await SB.from(action.table).update(updateData).eq('id', action.data.id).eq('user_id', USER.id);
+        } else {
+          res = { data: null, error: null }; // Traiter comme succès (skip volontaire)
+        }
       } else if (action.op === 'delete') {
         res = await SB.from(action.table).delete().eq('id', action.id_to_delete).eq('user_id', USER.id);
       }
@@ -5771,7 +6511,39 @@ async function syncOfflineQueue() {
         }
       }
     } catch(e) {
-      // sync offline silencieuse
+      var isTokenExpired = e && (
+        (e.status === 401) || (e.status === 403) ||
+        (e.message && (e.message.includes('JWT') || e.message.includes('token') || e.message.includes('401') || e.message.includes('403')))
+      );
+      if (isTokenExpired) {
+        // Jeton Supabase expiré pendant la session offline
+        // Tenter un refresh silencieux avant d'abandonner
+        try {
+          var refreshed = await SB.auth.refreshSession();
+          if (refreshed.data && refreshed.data.session) {
+            // Réessayer cette action une fois avec le nouveau token
+            if (action.op === 'insert') {
+              res = await SB.from(action.table).insert(action.data).select().single();
+            } else if (action.op === 'update') {
+              res = await SB.from(action.table).update(action.data).eq('id', action.data.id).eq('user_id', USER.id);
+            } else if (action.op === 'delete') {
+              res = await SB.from(action.table).delete().eq('id', action.id_to_delete).eq('user_id', USER.id);
+            }
+            if (!res || !res.error) {
+              succeeded.push(action.id);
+              if (action.op === 'insert' && res && res.data) updateLocalData(action.table, res.data);
+            }
+          } else {
+            // Session vraiment expirée → notifier et stopper la sync
+            toast('⚠️ Session expirée — reconnectez-vous pour synchroniser ' + _syncQueue.length + ' action(s)', 'error');
+            break;
+          }
+        } catch(refreshErr) {
+          toast('⚠️ Session expirée — reconnectez-vous pour synchroniser', 'error');
+          break;
+        }
+      }
+      // Autres erreurs : silencieux (sera retenté au prochain 'online')
     }
   }
 
@@ -5783,55 +6555,115 @@ async function syncOfflineQueue() {
   }
 
   _syncInProgress = false;
+  hideSync();
   updateOfflineIndicator();
 
   if (succeeded.length > 0) {
-    toast('✅ ' + succeeded.length + ' action(s) synchronisée(s)');
+    // Rafraîchir le cache local avec les données post-sync
+    setTimeout(cacheDataForOffline, 300);
+    // Rafraîchir la page courante pour afficher les vrais IDs serveur
+    if (window._currentPage) { try { go(window._currentPage); } catch(e2) {} }
+    toast('✅ ' + succeeded.length + '/' + (succeeded.length + (_syncQueue.length)) + ' action(s) synchronisée(s)');
   }
 }
 
 function updateLocalData(table, data) {
-  // Mettre à jour D.xxx avec les données fraîches du serveur
-  var map = {
-    'bl_items': 'bl_items', 'ct_docs': 'ct_docs',
-    'factures_client': 'factures_client', 'chantiers': 'chantiers',
+  // Mettre à jour D.xxx après sync ou insert offline
+  // ⚠️  Toutes les tables de l'application doivent être listées ici —
+  //     sinon les données créées hors-ligne n'apparaissent pas dans l'UI.
+  var MAP = {
+    'chantiers':       'chantiers',
+    'clients':         'clients',
+    'devis_docs':      'devis_docs',
+    'factures':        'factures',
+    'factures_client': 'factures_client',
+    'stocks':          'stocks',
+    'materiaux':       'materiaux',
+    'bl_items':        'bl_items',
+    'ct_docs':         'ct_docs',
+    'notes_chantier':  'notes_chantier',
+    'mouvements':      'mouvements',
+    'employees':       'employees',
+    'time_entries':    'time_entries',
+    'conducteur_pins': 'conducteur_pins',
   };
-  var key = map[table];
-  if (key && D[key]) {
-    var idx = D[key].findIndex(function(x){ return x.id === data.id; });
-    if (idx >= 0) D[key][idx] = data;
-    else D[key].unshift(data);
-  }
+  var key = MAP[table];
+  if (!key) return;
+  if (!D[key]) D[key] = [];
+  var idx = D[key].findIndex(function(x){ return x.id === data.id; });
+  if (idx >= 0) { D[key][idx] = data; }   // mise à jour
+  else          { D[key].unshift(data); }  // nouvel élément → en tête
 }
 
-// ── Insert offline-aware ──────────────────────────────────────────────
-// Remplace la fonction insert() existante pour gérer le mode offline
-var _insertOriginal = null;
+// ── Wrappers offline-aware ────────────────────────────────────────────
+// Interceptent insert / upsert / del quand _isOnline === false.
+// Les opérations sont stockées dans IndexedDB et rejouées à la reconnexion.
+var _offlineWrapped = false;
 function initOfflineInsert() {
-  // Wrapper autour de la fonction insert existante
+  if (_offlineWrapped) return; // idempotent
+  _offlineWrapped = true;
+
   var origInsert = window.insert;
-  if (!origInsert) return;
-  _insertOriginal = origInsert;
+  var origUpsert = window.upsert;
+  var origDel    = window.del;
 
-  window.insert = async function(table, data) {
-    if (_isOnline) {
-      return origInsert(table, data);
-    }
-    // Mode offline : stocker localement
-    data.id = data.id || uid();
-    data.user_id = data.user_id || (USER && USER.id);
-    data._offline = true;
-    data.created_at = new Date().toISOString();
+  // ── INSERT ────────────────────────────────────────────────────────
+  if (origInsert) {
+    window.insert = async function(table, data) {
+      if (_isOnline) return origInsert(table, data);
+      var local = Object.assign({}, data);
+      local.id         = local.id || uid();
+      local.user_id    = local.user_id || (USER && USER.id);
+      local._offline   = true;
+      local.created_at = local.created_at || new Date().toISOString();
+      local.updated_at = new Date().toISOString();
+      updateLocalData(table, local);
+      addToSyncQueue({ op: 'insert', table: table, data: local });
+      cacheDataForOffline();
+      showSync(); setTimeout(hideSync, 800);
+      toast('💾 Enregistré hors ligne · ' + _syncQueue.length + ' en attente');
+      return local;
+    };
+  }
 
-    // Ajouter à D localement
-    updateLocalData(table, data);
+  // ── UPSERT (=update) ──────────────────────────────────────────────
+  if (origUpsert) {
+    window.upsert = async function(table, data) {
+      if (_isOnline) return origUpsert(table, data);
+      var local = Object.assign({}, data);
+      local.user_id    = local.user_id || (USER && USER.id);
+      local._offline   = true;
+      local.updated_at = new Date().toISOString();
+      updateLocalData(table, local);
+      addToSyncQueue({ op: 'update', table: table, data: local });
+      cacheDataForOffline();
+      showSync(); setTimeout(hideSync, 800);
+      toast('💾 Modifié hors ligne · ' + _syncQueue.length + ' en attente');
+      return true;
+    };
+  }
 
-    // Mettre en file d'attente pour sync
-    addToSyncQueue({ op: 'insert', table: table, data: data });
-
-    toast('💾 Sauvegardé hors ligne — sera synchronisé à la reconnexion');
-    return data; // Retourner comme si c'était un succès
-  };
+  // ── DELETE ────────────────────────────────────────────────────────
+  if (origDel) {
+    window.del = async function(table, id) {
+      if (_isOnline) return origDel(table, id);
+      // Retirer localement dans D
+      var DMAP = {
+        chantiers:'chantiers', clients:'clients', devis_docs:'devis_docs',
+        factures:'factures', factures_client:'factures_client',
+        stocks:'stocks', materiaux:'materiaux', bl_items:'bl_items',
+        ct_docs:'ct_docs', notes_chantier:'notes_chantier',
+        mouvements:'mouvements', employees:'employees',
+        time_entries:'time_entries', conducteur_pins:'conducteur_pins',
+      };
+      var key = DMAP[table];
+      if (key && D[key]) D[key] = D[key].filter(function(x){ return x.id !== id; });
+      addToSyncQueue({ op: 'delete', table: table, id_to_delete: id });
+      cacheDataForOffline();
+      showSync(); setTimeout(hideSync, 800);
+      toast('🗑️ Supprimé hors ligne · sera synchronisé à la reconnexion');
+    };
+  }
 }
 
 // ── Cache des données pour mode offline ───────────────────────────────
@@ -5839,14 +6671,24 @@ async function cacheDataForOffline() {
   if (!_isOnline || !_offlineDB) return;
   try {
     var cacheData = {
-      key: 'app_data',
-      ts: Date.now(),
-      chantiers:      D.chantiers,
-      stocks:         D.stocks,
-      clients:        D.clients,
-      devis_docs:     D.devis_docs,
-      bl_items:       D.bl_items || [],
-      ct_docs:        D.ct_docs  || [],
+      key:             'app_data',
+      ts:              Date.now(),
+      // ── Phase 1 (chargées au démarrage) ──────────────
+      chantiers:       D.chantiers       || [],
+      clients:         D.clients         || [],
+      devis_docs:      D.devis_docs      || [],
+      factures:        D.factures        || [],
+      factures_client: D.factures_client || [],
+      stocks:          D.stocks          || [],
+      materiaux:       D.materiaux       || [],
+      conducteur_pins: D.conducteur_pins || [],
+      ct_docs:         D.ct_docs         || [],
+      // ── Phase 2 (lazy — incluses si déjà chargées) ───
+      bl_items:        D.bl_items        || [],
+      notes_chantier:  D.notes_chantier  || [],
+      mouvements:      D.mouvements      || [],
+      employees:       D.employees       || [],
+      time_entries:    D.time_entries    || [],
     };
     dbTransaction('cached_data', 'readwrite', function(store){ return store.put(cacheData); });
   } catch(e) {}
@@ -5856,14 +6698,26 @@ async function loadCachedData() {
   try {
     var data = await dbTransaction('cached_data', 'readonly', function(store){ return store.get('app_data'); });
     if (data && data.ts) {
-      D.chantiers  = D.chantiers.length  ? D.chantiers  : (data.chantiers||[]);
-      D.stocks     = D.stocks.length     ? D.stocks     : (data.stocks||[]);
-      D.clients    = D.clients.length    ? D.clients    : (data.clients||[]);
-      D.devis_docs = D.devis_docs.length ? D.devis_docs : (data.devis_docs||[]);
-      D.bl_items   = D.bl_items.length   ? D.bl_items   : (data.bl_items||[]);
-      D.ct_docs    = D.ct_docs.length    ? D.ct_docs    : (data.ct_docs||[]);
-      var age = Math.round((Date.now() - data.ts) / 60000);
-      // cache local chargé
+      // Priorité aux données serveur : ne remplacer que ce qui est vide
+      var fill = function(live, cached) { return (live && live.length) ? live : (cached || []); };
+      D.chantiers       = fill(D.chantiers,       data.chantiers);
+      D.clients         = fill(D.clients,         data.clients);
+      D.devis_docs      = fill(D.devis_docs,      data.devis_docs);
+      D.factures        = fill(D.factures,        data.factures);
+      D.factures_client = fill(D.factures_client, data.factures_client);
+      D.stocks          = fill(D.stocks,          data.stocks);
+      D.materiaux       = fill(D.materiaux,       data.materiaux);
+      D.conducteur_pins = fill(D.conducteur_pins, data.conducteur_pins);
+      D.ct_docs         = fill(D.ct_docs,         data.ct_docs);
+      D.bl_items        = fill(D.bl_items,        data.bl_items);
+      D.notes_chantier  = fill(D.notes_chantier,  data.notes_chantier);
+      D.mouvements      = fill(D.mouvements,      data.mouvements);
+      D.employees       = fill(D.employees,       data.employees);
+      D.time_entries    = fill(D.time_entries,     data.time_entries);
+      var ageMin = Math.round((Date.now() - data.ts) / 60000);
+      if (!_isOnline) {
+        toast('📦 Données locales chargées (' + (ageMin < 1 ? '< 1 min' : ageMin + ' min') + ') — reconnectez-vous pour actualiser');
+      }
     }
   } catch(e) {}
 }
@@ -5986,88 +6840,191 @@ function renderPlanBadgeV9() {
 }
 
 // ─── 2. ONBOARDING WAOUH (90 secondes) ─────────────────────
+/* ═══════════════════════════════════════════════════════════
+   ONBOARDING WIZARD v12 — 3 étapes, < 2 minutes
+   Étape 1 : nom de l'entreprise  (pré-remplit les paramètres)
+   Étape 2 : premier chantier    (avec données réelles ou démo)
+   Étape 3 : confirmation        (confiance + export)
+   ═══════════════════════════════════════════════════════════ */
 function showOnboardingWaouh() {
   var isNew = D.chantiers.length === 0 && D.clients.length === 0;
   if (!isNew) return;
-  var alreadyShown = sessionStorage.getItem('batipilot_onboarding_v9');
+  var alreadyShown = localStorage.getItem('batipilot_onboarding_v12');
   if (alreadyShown) return;
-  sessionStorage.setItem('batipilot_onboarding_v9', '1');
+  localStorage.setItem('batipilot_onboarding_v12', '1');
+
+  // — Variables de collecte du wizard
+  window._obWizard = { step: 1, company: D.settings.company || '', chantierNom: '', chantierBudget: '' };
 
   var overlay = document.createElement('div');
   overlay.id = 'waouh-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;padding:0;max-width:600px;width:94%;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.4)">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#1C2B4A,#2D3E8C);color:white;padding:28px 32px 20px">
-        <div style="font-size:32px;margin-bottom:6px">🏗️ BatiPilot</div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:4px">Votre marge, sous contrôle.</div>
-        <div style="font-size:13px;opacity:0.85">Regardez ce qui se passe sans BatiPilot — puis avec.</div>
-      </div>
+  overlay.style.cssText = [
+    'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center',
+    'background:rgba(14,20,38,0.82)',
+    'padding:16px',
+  ].join(';');
 
-      <!-- Scénario animé -->
-      <div id="waouh-step" style="padding:24px 32px;min-height:200px">
-        <div id="waouh-step-1">
-          <div style="font-size:36px;margin-bottom:12px">😰</div>
-          <div style="font-size:17px;font-weight:700;color:#B91C1C;margin-bottom:8px">Sans BatiPilot : vous perdez de l'argent sans le savoir</div>
-          <div style="font-size:14px;color:#555;line-height:1.7">
-            Vos ouvriers commandent des matériaux. Le budget est dépassé de <strong>2 400 €</strong>. Vous l'apprenez… à la fin du chantier.
-            <br><br>
-            <span style="background:#FEE2E2;color:#B91C1C;border-radius:8px;padding:6px 12px;display:inline-block;font-weight:600">📉 Chantier "Réno T3" → Marge réelle : <strong>-8%</strong></span>
-          </div>
-        </div>
-        <div id="waouh-step-2" style="display:none">
-          <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-          <div style="font-size:17px;font-weight:700;color:#C0622A;margin-bottom:8px">BatiPilot détecte le problème en temps réel</div>
-          <div style="font-size:14px;color:#555;line-height:1.7">
-            Dès que le budget matériaux atteint <strong>80%</strong>, une alerte est déclenchée automatiquement.
-            <br><br>
-            <span style="background:#FEF3C7;color:#92400E;border-radius:8px;padding:6px 12px;display:inline-block;font-weight:600">⚠️ Budget mat. à 82% — Reste 1 296 € (commande en attente : 1 800 €)</span>
-          </div>
-        </div>
-        <div id="waouh-step-3" style="display:none">
-          <div style="font-size:36px;margin-bottom:12px">🟢</div>
-          <div style="font-size:17px;font-weight:700;color:#2D7A4F;margin-bottom:8px">Vous intervenez. La marge est sauvée.</div>
-          <div style="font-size:14px;color:#555;line-height:1.7">
-            Vous renégociez la commande, validez un avenant, ou ajustez le planning. La marge repasse dans le vert.
-            <br><br>
-            <span style="background:#DCFCE7;color:#166534;border-radius:8px;padding:6px 12px;display:inline-block;font-weight:600">🟢 Marge chantier "Réno T3" : +18% — 3 330 €</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Progress & barre -->
-      <div style="padding:0 32px">
-        <div style="display:flex;gap:6px;margin-bottom:4px">
-          <div id="wdot-1" style="height:4px;flex:1;border-radius:2px;background:#1C2B4A;transition:background 0.3s"></div>
-          <div id="wdot-2" style="height:4px;flex:1;border-radius:2px;background:#e5e7eb;transition:background 0.3s"></div>
-          <div id="wdot-3" style="height:4px;flex:1;border-radius:2px;background:#e5e7eb;transition:background 0.3s"></div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div style="padding:20px 32px 28px;display:flex;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-primary" style="flex:1;min-width:160px" onclick="startWithDemo()">🎬 Voir avec mes données démo</button>
-        <button class="btn btn-secondary" style="flex:1;min-width:160px" onclick="closeWaouh();go('chantiers')">➕ Créer mon premier chantier</button>
-        <button onclick="closeWaouh()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;width:100%;text-align:center;padding-top:4px">Passer l'introduction</button>
-      </div>
-    </div>
-  `;
   document.body.appendChild(overlay);
+  _obRender(1);
+}
 
-  // Animation des étapes
-  var step = 1;
-  var timer = setInterval(function() {
-    step++;
-    if (step > 3) { clearInterval(timer); return; }
-    for (var i=1;i<=3;i++) {
-      var el = $('waouh-step-'+i);
-      if (el) el.style.display = (i===step)?'block':'none';
-      var dot = $('wdot-'+i);
-      if (dot) dot.style.background = (i<=step)?'#1C2B4A':'#e5e7eb';
+function _obRender(step) {
+  window._obWizard.step = step;
+  var ov = $('waouh-overlay');
+  if (!ov) return;
+
+  var STEPS = ['🏢 Votre entreprise','🏗️ Premier chantier','✅ C\'est parti !'];
+  var dots = STEPS.map(function(_, i) {
+    var active = i + 1 <= step;
+    return '<div style="display:flex;align-items:center;gap:6px">'
+      + '<div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all 0.25s;'
+        + (active ? 'background:#C0622A;color:white' : 'background:#e5e7eb;color:#9ca3af') + '">' + (i+1) + '</div>'
+      + '<span style="font-size:12px;' + (active ? 'color:#1C2B4A;font-weight:600' : 'color:#9ca3af') + '">' + STEPS[i] + '</span>'
+      + (i < STEPS.length - 1 ? '<div style="width:28px;height:2px;margin:0 4px;border-radius:2px;background:' + (i+1 < step ? '#C0622A' : '#e5e7eb') + '"></div>' : '')
+      + '</div>';
+  }).join('');
+
+  var bodyHTML = '';
+  if (step === 1) {
+    var val = window._obWizard.company || '';
+    bodyHTML = ''
+      + '<div style="font-size:28px;margin-bottom:10px;text-align:center">🏢</div>'
+      + '<div style="font-size:17px;font-weight:800;color:#1C2B4A;margin-bottom:6px;text-align:center">Comment s\'appelle votre entreprise ?</div>'
+      + '<div style="font-size:13px;color:#6b7280;text-align:center;margin-bottom:22px">Cette info apparaîtra sur vos devis et factures.</div>'
+      + '<input id="ob-company" type="text" placeholder="Ex : Maçonnerie Dupont, SARL Bat-Est…" '
+        + 'style="width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;outline:none;transition:border 0.2s" '
+        + 'value="' + val.replace(/"/g, '&quot;') + '" '
+        + 'oninput="window._obWizard.company=this.value" '
+        + 'onfocus="this.style.borderColor=\'#C0622A\'" '
+        + 'onblur="this.style.borderColor=\'#e5e7eb\'" />'
+      + '<div style="margin-top:22px;display:flex;gap:10px">'
+        + '<button class="btn btn-primary" style="flex:1;padding:14px;font-size:15px" onclick="_obNext(1)">Suivant →</button>'
+      + '</div>'
+      + '<div style="text-align:center;margin-top:14px">'
+        + '<button onclick="closeWaouh()" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer">Passer la configuration</button>'
+      + '</div>';
+  } else if (step === 2) {
+    bodyHTML = ''
+      + '<div style="font-size:28px;margin-bottom:10px;text-align:center">🏗️</div>'
+      + '<div style="font-size:17px;font-weight:800;color:#1C2B4A;margin-bottom:6px;text-align:center">Votre premier chantier</div>'
+      + '<div style="font-size:13px;color:#6b7280;text-align:center;margin-bottom:20px">30 secondes et vous êtes opérationnel.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:12px">'
+        + '<input id="ob-chantier" type="text" placeholder="Nom du chantier (ex : Réno Dupont, Extension T3…)" '
+          + 'style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none" '
+          + 'value="' + (window._obWizard.chantierNom||'').replace(/"/g,'&quot;') + '" '
+          + 'oninput="window._obWizard.chantierNom=this.value" '
+          + 'onfocus="this.style.borderColor=\'#C0622A\'" onblur="this.style.borderColor=\'#e5e7eb\'" />'
+        + '<input id="ob-budget" type="number" placeholder="Budget total estimé (€) — optionnel" '
+          + 'style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none" '
+          + 'value="' + (window._obWizard.chantierBudget||'') + '" '
+          + 'oninput="window._obWizard.chantierBudget=this.value" '
+          + 'onfocus="this.style.borderColor=\'#C0622A\'" onblur="this.style.borderColor=\'#e5e7eb\'" />'
+      + '</div>'
+      + '<div style="margin-top:8px;padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:12px;color:#6b7280">'
+        + '💡 Vous pourrez ajouter le client, les matériaux et les heures ensuite.'
+      + '</div>'
+      + '<div style="margin-top:18px;display:flex;gap:10px">'
+        + '<button class="btn btn-secondary" style="padding:12px 18px" onclick="_obRender(1)">← Retour</button>'
+        + '<button class="btn btn-primary" style="flex:1;padding:14px;font-size:15px" onclick="_obNext(2)">Créer ce chantier →</button>'
+      + '</div>'
+      + '<div style="text-align:center;margin-top:10px">'
+        + '<button onclick="closeWaouh();startWithDemo()" style="background:none;border:none;color:#C0622A;font-size:12.5px;cursor:pointer;text-decoration:underline">Ou charger des données de démo →</button>'
+      + '</div>';
+  } else if (step === 3) {
+    bodyHTML = ''
+      + '<div style="text-align:center;padding:8px 0 16px">'
+        + '<div style="font-size:52px;margin-bottom:12px">🟢</div>'
+        + '<div style="font-size:20px;font-weight:900;color:#1C2B4A;margin-bottom:8px">Tout est prêt !</div>'
+        + '<div style="font-size:14px;color:#6b7280;line-height:1.7;margin-bottom:20px">'
+          + 'Votre chantier <strong>' + (window._obWizard.chantierNom || 'Premier chantier').replace(/</g,'&lt;') + '</strong> est créé.<br>'
+          + 'Vos données vous appartiennent — exportables en 1 clic à tout moment.'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:8px;max-width:340px;margin:0 auto">'
+          + '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:13px;color:#166534">'
+            + '<span style="font-size:18px">🔒</span>'
+            + '<span>Hébergé en Europe — conforme RGPD</span>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#eff6ff;border-radius:10px;font-size:13px;color:#1e40af">'
+            + '<span style="font-size:18px">📦</span>'
+            + '<span>Export complet de vos données en 1 clic</span>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fef9c3;border-radius:10px;font-size:13px;color:#713f12">'
+            + '<span style="font-size:18px">💬</span>'
+            + '<span>Support IA disponible 24h/24 via le bouton <strong>?</strong></span>'
+          + '</div>'
+        + '</div>'
+        + '<button class="btn btn-primary" style="margin-top:22px;padding:14px 32px;font-size:16px;width:100%" onclick="closeWaouh();go(\'chantiers\')">'
+          + '🚀 Ouvrir mon tableau de bord →'
+        + '</button>'
+      + '</div>';
+  }
+
+  ov.innerHTML = ''
+    + '<div style="background:#fff;border-radius:20px;padding:0;max-width:520px;width:100%;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.35)">'
+      // Header gradient
+      + '<div style="background:linear-gradient(135deg,#1C2B4A,#2D3E8C);padding:20px 28px 16px">'
+        + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Configuration initiale</div>'
+        + '<div style="font-size:18px;font-weight:800;color:white">BatiPilot — démarrage en 2 min ⚡</div>'
+      + '</div>'
+      // Steps indicator
+      + '<div style="padding:14px 28px 0;display:flex;align-items:center;flex-wrap:wrap;gap:4px">' + dots + '</div>'
+      // Body
+      + '<div style="padding:20px 28px 24px">' + bodyHTML + '</div>'
+    + '</div>';
+
+  // Focus automatique sur le premier champ
+  setTimeout(function() {
+    var inp = ov.querySelector('input[id^="ob-"]');
+    if (inp) { inp.focus(); inp.addEventListener('keydown', function(e){ if(e.key==='Enter') { var n=window._obWizard.step; _obNext(n); } }); }
+  }, 80);
+}
+
+async function _obNext(step) {
+  if (step === 1) {
+    // Sauvegarder le nom de l'entreprise dans les settings
+    var company = (window._obWizard.company || '').trim();
+    if (!company) {
+      var inp = $('ob-company');
+      if (inp) { inp.style.borderColor = '#ef4444'; inp.focus(); }
+      toast('Entrez le nom de votre entreprise pour continuer', 'error');
+      return;
     }
-  }, 3500);
-  overlay._timer = timer;
+    D.settings.company = company;
+    // Persistance silencieuse (non bloquante)
+    saveSetting().catch(function(){});
+    // Update sidebar company name
+    var sc = $('sidebar-company');
+    if (sc) sc.textContent = company;
+    _obRender(2);
+  } else if (step === 2) {
+    var nom = (window._obWizard.chantierNom || '').trim();
+    if (!nom) {
+      var inp2 = $('ob-chantier');
+      if (inp2) { inp2.style.borderColor = '#ef4444'; inp2.focus(); }
+      toast('Donnez un nom à votre chantier', 'error');
+      return;
+    }
+    // Créer le chantier immédiatement
+    var budget = parseFloat(window._obWizard.chantierBudget) || 0;
+    try {
+      var newCh = {
+        user_id:    USER.id,
+        nom:        nom,
+        statut:     'en_cours',
+        budget_mat: budget || null,
+        created_at: today(),
+        updated_at: today(),
+      };
+      var res = await SB.from('chantiers').insert(newCh).select().single();
+      if (res && res.data) {
+        D.chantiers.unshift(res.data);
+        window._obWizard.chantierCreated = res.data.id;
+      }
+    } catch(e) {
+      // Silencieux — l'utilisateur peut créer son chantier manuellement ensuite
+    }
+    _obRender(3);
+  }
 }
 
 function closeWaouh() {
@@ -6571,6 +7528,150 @@ function initV10() {
 
 
 // ─── PAYWALL ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// GESTION ABONNEMENT — checkSubscriptionStatus()
+// Appelé au démarrage ET après retour depuis Stripe
+// ══════════════════════════════════════════════════════════════════════
+
+/* Clés des boutons d'écriture à désactiver en mode lecture seule */
+var _WRITE_BTN_SELECTORS = [
+  'btn-save', 'btn-create', 'btn-add', 'btn-new',
+  'ob-save', 'ob-skip',
+];
+
+/* Flag global : true quand l'abonnement est expiré */
+var _readOnlyMode = false;
+
+/**
+ * Vérifie l'état de l'abonnement en base (pas depuis D.settings en RAM).
+ * - 'active'  → tout est OK
+ * - 'trial'   → vérifier trial_ends_at, basculer si expiré
+ * - 'expired' → mode lecture seule + overlay paywall
+ * @param {boolean} fromStripeReturn - true si appelé après retour Stripe (rechargement des settings)
+ */
+async function checkSubscriptionStatus(fromStripeReturn) {
+  if (!USER || !USER.id) return;
+
+  // Si appelé depuis Stripe, recharger les settings depuis la DB
+  // pour avoir le statut mis à jour par le webhook
+  if (fromStripeReturn) {
+    try {
+      var fresh = await SB.from('settings')
+        .select('plan,subscription_status,trial_ends_at')
+        .eq('user_id', USER.id)
+        .maybeSingle();
+      if (fresh.data) {
+        D.settings.plan                = fresh.data.plan || D.settings.plan;
+        D.settings.subscription_status = fresh.data.subscription_status || D.settings.subscription_status;
+        D.settings.trial_ends_at       = fresh.data.trial_ends_at || D.settings.trial_ends_at;
+      }
+    } catch(e) { /* silencieux */ }
+  }
+
+  var subStatus = D.settings.subscription_status || 'trial';
+  var plan      = D.settings.plan || 'gratuit';
+
+  // Sécurité : si D.settings est vide/partiel (ex: erreur réseau), ne pas bloquer
+  if (!D.settings || !D.settings.subscription_status) {
+    _setReadOnlyMode(false);
+    return;
+  }
+
+  // ── Cas 1 : abonné actif → tout débloquer ──────────────────────
+  if (subStatus === 'active' || (plan !== 'gratuit' && subStatus !== 'expired')) {
+    _setReadOnlyMode(false);
+    renderPlanBadgeV9();
+    return;
+  }
+
+  // ── Cas 2 : en essai → vérifier expiration ─────────────────────
+  if (subStatus === 'trial') {
+    var info = getTrialInfo();
+    if (!info.expired) {
+      _setReadOnlyMode(false);
+      renderPlanBadgeV9();
+      return;
+    }
+    // Essai expiré → mettre à jour en base et basculer
+    subStatus = 'expired';
+    D.settings.subscription_status = 'expired';
+    try {
+      await SB.from('settings')
+        .update({ subscription_status: 'expired' })
+        .eq('user_id', USER.id);
+    } catch(e) { /* silencieux */ }
+  }
+
+  // ── Cas 3 : expiré → mode lecture seule + paywall ──────────────
+  _setReadOnlyMode(true);
+  renderPlanBadgeV9();
+  checkPaywall();
+}
+
+/**
+ * Active ou désactive le mode lecture seule.
+ * Désactive tous les boutons d'écriture (Enregistrer, Créer, Ajouter).
+ */
+function _setReadOnlyMode(enable) {
+  _readOnlyMode = enable;
+
+  if (enable) {
+    // Bannière persistante en haut de l'app
+    var existing = document.getElementById('readonly-banner');
+    if (!existing) {
+      var banner = document.createElement('div');
+      banner.id = 'readonly-banner';
+      banner.style.cssText = [
+        'position:fixed;top:0;left:0;right:0;z-index:8000',
+        'background:#B91C1C;color:#fff;text-align:center',
+        'padding:8px 16px;font-size:13px;font-weight:600',
+        'display:flex;align-items:center;justify-content:center;gap:12px',
+      ].join(';');
+      banner.innerHTML = '🔒 Mode lecture seule — Votre essai a expiré. '
+        + '<button onclick="closeModal();go(\"abonnement\")" '
+        + 'style="background:#fff;color:#B91C1C;border:none;border-radius:6px;'
+        + 'padding:4px 12px;font-weight:700;cursor:pointer;font-size:12px">'
+        + '⚡ Activer mon plan</button>';
+      document.body.appendChild(banner);
+      // Décaler l'app vers le bas pour ne pas masquer le contenu
+      var app = document.getElementById('app');
+      if (app) app.style.paddingTop = '40px';
+    }
+    // Désactiver les boutons de création/sauvegarde dans le DOM actuel
+    _disableWriteButtons(true);
+  } else {
+    // Retirer la bannière
+    var b = document.getElementById('readonly-banner');
+    if (b) b.remove();
+    var app = document.getElementById('app');
+    if (app) app.style.paddingTop = '';
+    _disableWriteButtons(false);
+  }
+}
+
+/**
+ * Désactive/réactive les boutons d'écriture dans le DOM.
+ * Appelé aussi à chaque navigation (go()) pour couvrir les boutons générés dynamiquement.
+ */
+function _disableWriteButtons(disable) {
+  if (!disable) return; // Réactivation gérée par rechargement de page / login
+  // Cibler tous les boutons primaires de création/sauvegarde dans #content
+  var content = document.getElementById('content');
+  if (!content) return;
+  var btns = content.querySelectorAll('button.btn:not(.btn-ghost):not(.btn-secondary)');
+  btns.forEach(function(btn) {
+    var txt = (btn.textContent || '').toLowerCase();
+    var isWrite = txt.includes('enregistr') || txt.includes('créer') || txt.includes('ajouter')
+               || txt.includes('sauvegarder') || txt.includes('nouveau') || txt.includes('créat');
+    if (isWrite) {
+      btn.disabled = true;
+      btn.title = 'Abonnement expiré — passez au plan Solo pour continuer';
+      btn.style.opacity = '0.45';
+      btn.style.cursor = 'not-allowed';
+    }
+  });
+}
+
 function checkPaywall() {
   if (!D.settings) return;
   var subStatus = D.settings.subscription_status || 'trial';
@@ -6799,6 +7900,511 @@ function _dashQuickLink(page, ico, label, sub) {
     <button class="mode-btn" id="mode-conducteur" onclick="switchMode('conducteur')">🦺 Terrain</button>
   </div>
 </div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SUPPORT IA — BatiPilot Assistant v2
+     ──────────────────────────────────────────────────────────────────
+     ARCHITECTURE (3 modes, détection automatique) :
+
+     MODE 1 — Production (recommandé) :
+       Déployez chat_proxy.ts dans Supabase Edge Functions.
+       La clé Anthropic reste côté serveur, jamais exposée au client.
+       URL : https://<projet>.supabase.co/functions/v1/chat-proxy
+
+     MODE 2 — Développement / test :
+       Saisissez votre clé API dans le champ masqué (bouton ⚙️ dans
+       l'en-tête du widget). Elle est stockée en sessionStorage seulement
+       (disparaît à la fermeture du navigateur) et transmise uniquement
+       à l'API Anthropic directement. NE PAS utiliser en production.
+
+     MODE 3 — Fallback honnête :
+       Si aucune clé ni proxy n'est configuré, le widget l'indique
+       clairement et propose une alternative (email support).
+
+     DÉPLOIEMENT RAPIDE :
+       1. Copiez chat_proxy.ts dans supabase/functions/chat-proxy/index.ts
+       2. Ajoutez ANTHROPIC_API_KEY dans les secrets Supabase
+       3. Remplacez SUPPORT_PROXY_URL ci-dessous par votre URL
+     ════════════════════════════════════════════════════════════════ -->
+
+<style>
+/* ── Support Widget ─────────────────────────────────── */
+#bp-fab {
+  position: fixed; bottom: 80px; right: 20px; z-index: 4000;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg,#1C2B4A,#2D3E8C);
+  color: white; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 20px rgba(28,43,74,0.45);
+  transition: transform .18s, background .2s;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+#bp-fab:hover  { transform: scale(1.09); }
+#bp-fab:active { transform: scale(0.94); }
+#bp-fab.open   { background: linear-gradient(135deg,#374151,#6B7280); font-size: 18px; }
+
+#bp-panel {
+  display: none;
+  position: fixed; bottom: 142px; right: 16px; z-index: 4001;
+  width: 344px; max-width: calc(100vw - 32px);
+  max-height: 540px;
+  background: white; border-radius: 18px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+  border: 1px solid rgba(28,43,74,0.1);
+  flex-direction: column; overflow: hidden;
+}
+#bp-panel.open { display: flex; }
+
+#bp-panel-header {
+  background: linear-gradient(135deg,#1C2B4A,#2D3E8C);
+  color: white; padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.bp-avatar-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+}
+.bp-header-text { flex: 1; }
+.bp-header-title  { font-weight: 700; font-size: 14px; }
+.bp-header-status { font-size: 11px; opacity: 0.8; margin-top: 1px; }
+#bp-header-close {
+  background: rgba(255,255,255,0.15); border: none; color: white;
+  width: 28px; height: 28px; border-radius: 50%;
+  cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s;
+}
+#bp-header-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Config API (mode dev) ─────── */
+#bp-config-bar {
+  background: #FEF3C7; border-bottom: 1px solid #FCD34D;
+  padding: 8px 12px; font-size: 11.5px;
+  display: none; gap: 6px; align-items: center; flex-shrink: 0;
+}
+#bp-config-bar.visible { display: flex; }
+#bp-config-bar input {
+  flex: 1; border: 1px solid #FCD34D; border-radius: 6px;
+  padding: 4px 8px; font-size: 11.5px; font-family: monospace;
+  background: white; outline: none;
+}
+#bp-config-bar button {
+  background: #F59E0B; color: white; border: none;
+  border-radius: 6px; padding: 4px 10px; font-size: 11.5px;
+  cursor: pointer; white-space: nowrap;
+}
+
+#bp-messages {
+  flex: 1; overflow-y: auto; padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  min-height: 180px; -webkit-overflow-scrolling: touch;
+}
+.bp-msg {
+  max-width: 88%; font-size: 13px; line-height: 1.6;
+  word-break: break-word; padding: 9px 13px; border-radius: 14px;
+}
+.bp-msg.user {
+  align-self: flex-end; background: var(--accent,#C0622A);
+  color: white; border-radius: 14px 14px 4px 14px;
+}
+.bp-msg.assistant {
+  align-self: flex-start; background: #F3F4F6;
+  color: #111827; border-radius: 14px 14px 14px 4px;
+  border: 1px solid #E5E7EB;
+}
+.bp-msg.assistant.error { background: #FEF2F2; border-color: #FECACA; color: #7F1D1D; }
+.bp-msg.typing { color: #9CA3AF; font-size: 20px; letter-spacing: 3px; padding: 8px 14px; }
+
+#bp-quick-btns {
+  padding: 0 10px 8px;
+  display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0;
+}
+.bp-quick {
+  background: white; border: 1px solid #E5E7EB;
+  border-radius: 20px; padding: 4px 11px;
+  font-size: 11.5px; color: #6B7280; cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.bp-quick:hover { background: #1C2B4A; color: white; border-color: #1C2B4A; }
+
+#bp-input-area {
+  padding: 10px 12px; border-top: 1px solid #E5E7EB;
+  display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0;
+}
+#bp-input {
+  flex: 1; resize: none; border: 1px solid #E5E7EB;
+  border-radius: 10px; padding: 9px 12px;
+  font-size: 13px; font-family: inherit;
+  background: #F9FAFB; color: #111827; outline: none;
+  max-height: 80px; line-height: 1.4;
+  transition: border-color .15s;
+}
+#bp-input:focus { border-color: #1C2B4A; background: white; }
+#bp-send {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #1C2B4A; border: none; color: white;
+  cursor: pointer; font-size: 15px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+#bp-send:hover    { background: #2D3E8C; }
+#bp-send:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Banner avertissement (mode dev) ─────────── */
+#bp-dev-banner {
+  background: #FFFBEB; border-bottom: 1px solid #FCD34D;
+  padding: 6px 12px; font-size: 11px; color: #92400E;
+  text-align: center; display: none; flex-shrink: 0;
+}
+#bp-dev-banner.visible { display: block; }
+
+@media (max-width: 768px) {
+  #bp-panel { bottom: 130px; right: 8px; left: 8px; width: auto; max-width: none; border-radius: 14px; }
+  #bp-fab   { bottom: 74px; right: 14px; }
+}
+</style>
+
+<!-- FAB -->
+<button id="bp-fab" onclick="bpToggle()" aria-label="Aide & Support BatiPilot" title="Aide & Support IA">💬</button>
+
+<!-- Panel -->
+<div id="bp-panel" role="dialog" aria-label="Support BatiPilot">
+
+  <!-- Header -->
+  <div id="bp-panel-header">
+    <div class="bp-avatar-circle">🤖</div>
+    <div class="bp-header-text">
+      <div class="bp-header-title">Assistant BatiPilot</div>
+      <div class="bp-header-status" id="bp-status">● Disponible 24h/24</div>
+    </div>
+    <button id="bp-header-close" onclick="bpToggle()" aria-label="Fermer">×</button>
+  </div>
+
+  <!-- Bannière mode dev (clé API saisie manuellement) -->
+  <div id="bp-dev-banner">
+    ⚠️ Mode développement — Clé API en session uniquement. Ne pas utiliser en production.
+  </div>
+
+  <!-- Config bar (affichée si pas de proxy configuré) -->
+  <div id="bp-config-bar">
+    <span style="flex-shrink:0;color:#92400E">🔑</span>
+    <input type="password" id="bp-apikey-input" placeholder="sk-ant-… (session seulement)" autocomplete="off">
+    <button onclick="bpSaveKey()">Valider</button>
+  </div>
+
+  <!-- Messages -->
+  <div id="bp-messages"></div>
+
+  <!-- Quick replies -->
+  <div id="bp-quick-btns"></div>
+
+  <!-- Saisie -->
+  <div id="bp-input-area">
+    <textarea id="bp-input" rows="1" placeholder="Posez votre question…"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();bpSend();}"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+    <button id="bp-send" onclick="bpSend()" aria-label="Envoyer">➤</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   SUPPORT IA — BatiPilot Chat Widget
+   ══════════════════════════════════════════════════════════════════
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │  CONFIGURATION — à modifier avant mise en production        │
+   ├─────────────────────────────────────────────────────────────┤
+   │                                                             │
+   │  Option A (recommandée) — Proxy Supabase Edge Function :   │
+   │    var SUPPORT_PROXY_URL =                                  │
+   │      'https://VOTRE_PROJET.supabase.co/functions/v1/chat-proxy'; │
+   │                                                             │
+   │  Option B — Pas de proxy → le widget propose la saisie     │
+   │    manuelle de la clé API (mode dev uniquement).            │
+   │                                                             │
+   └─────────────────────────────────────────────────────────────┘
+
+   Fichier Edge Function à déployer : chat_proxy.ts (livré séparément)
+*/
+
+// ── ⚙️  À CONFIGURER ──────────────────────────────────────────
+// Remplacez par votre URL Supabase Edge Function après déploiement.
+// Tant que cette valeur est '', le widget passe en mode dev (saisie clé).
+var SUPPORT_PROXY_URL = '';   // ex: 'https://xyz.supabase.co/functions/v1/chat-proxy'
+// ─────────────────────────────────────────────────────────────
+
+var _bp = {
+  open:    false,
+  loading: false,
+  history: [],  // [{ role, content }]
+  devKey:  sessionStorage.getItem('bp_dev_key') || '', // clé API dev (session seulement)
+};
+
+/* System prompt expert BatiPilot */
+var BP_SYS = 'Tu es l\'assistant intégré de BatiPilot, un SaaS de gestion de chantiers pour artisans du bâtiment français.'
+  + ' Réponds en français, de façon concise (max 4 phrases sauf si l\'utilisateur demande plus).'
+  + ' Tu es expert en : navigation BatiPilot (devis, chantiers, facturation, stock, planning), TVA BTP, LME, assurance décennale, gestion de marge.'
+  + ' Pour les actions dans l\'app, cite le menu exact : "Allez dans X → cliquez Y".'
+  + ' Si hors périmètre (conseil juridique complexe), oriente vers un professionnel. Ne mentionne jamais de concurrents.';
+
+var BP_QUICK_INIT = [
+  '📋 Créer un devis',
+  '⬇️ Exporter mes données',
+  '📶 Mode hors-ligne',
+  '💳 Mon abonnement',
+  '🧾 Relance facture impayée',
+];
+
+/* ── Toggle ───────────────────────────────────────────────────── */
+window.bpToggle = function() {
+  _bp.open = !_bp.open;
+  var fab   = document.getElementById('bp-fab');
+  var panel = document.getElementById('bp-panel');
+  if (!panel) return;
+
+  if (_bp.open) {
+    panel.classList.add('open');
+    fab.classList.add('open');
+    fab.textContent = '✕';
+    if (_bp.history.length === 0) _bpWelcome();
+    setTimeout(function() { var i = document.getElementById('bp-input'); if (i) i.focus(); }, 100);
+  } else {
+    panel.classList.remove('open');
+    fab.classList.remove('open');
+    fab.textContent = '💬';
+  }
+};
+
+/* ── Message de bienvenue ─────────────────────────────────────── */
+function _bpWelcome() {
+  var company = window.D && D.settings && D.settings.company ? ' chez ' + D.settings.company : '';
+  _bpMsg('assistant', 'Bonjour' + company + ' ! 👋\nJe suis votre assistant BatiPilot — posez-moi toutes vos questions sur l\'application ou la gestion de vos chantiers.');
+
+  // Si pas de proxy ET pas de clé dev → message transparent + config bar
+  if (!SUPPORT_PROXY_URL && !_bp.devKey) {
+    _bpMsg('assistant',
+      '⚙️ **Configuration requise**\n\n'
+      + 'Pour activer l\'assistant IA, deux options :\n\n'
+      + '• **Production** : déployez le proxy Supabase (voir `chat_proxy.ts` livré avec BatiPilot)\n'
+      + '• **Test rapide** : saisissez votre clé Anthropic dans le champ ci-dessous\n\n'
+      + 'Sans configuration, le chat est désactivé. Vous pouvez nous joindre par email :',
+      false, false
+    );
+    _bpMsg('assistant', '📧 contact@batipilot.fr', false, false);
+    document.getElementById('bp-config-bar').classList.add('visible');
+    document.getElementById('bp-status').textContent = '⚙️ Configuration requise';
+    return;
+  }
+
+  _bpMsg('assistant', '');  // spacer (will render quick buttons)
+  _bpRenderQuick(BP_QUICK_INIT);
+}
+
+/* ── Sauvegarder clé dev ──────────────────────────────────────── */
+window.bpSaveKey = function() {
+  var k = (document.getElementById('bp-apikey-input').value || '').trim();
+  if (!k.startsWith('sk-ant-')) {
+    alert('Clé Anthropic invalide — elle doit commencer par sk-ant-');
+    return;
+  }
+  _bp.devKey = k;
+  sessionStorage.setItem('bp_dev_key', k);
+  document.getElementById('bp-config-bar').classList.remove('visible');
+  document.getElementById('bp-dev-banner').classList.add('visible');
+  document.getElementById('bp-status').textContent = '⚠️ Mode dev — clé en session';
+  // Vider les messages d'instruction et refaire la bienvenue
+  document.getElementById('bp-messages').innerHTML = '';
+  document.getElementById('bp-quick-btns').innerHTML = '';
+  _bp.history = [];
+  _bpMsg('assistant', '✅ Clé validée (session uniquement). Posez votre première question !');
+  _bpRenderQuick(BP_QUICK_INIT);
+};
+
+/* ── Envoyer ──────────────────────────────────────────────────── */
+window.bpSend = function(prefill) {
+  var inp  = document.getElementById('bp-input');
+  var text = (prefill || (inp && inp.value) || '').trim();
+  if (!text || _bp.loading) return;
+  if (inp) { inp.value = ''; inp.style.height = 'auto'; }
+
+  // Masquer quick buttons
+  document.getElementById('bp-quick-btns').innerHTML = '';
+
+  _bpMsg('user', text);
+  _bp.history.push({ role: 'user', content: text });
+  _bpCallAI();
+};
+
+/* ── Appel API ────────────────────────────────────────────────── */
+async function _bpCallAI() {
+  // Vérifications préalables
+  if (!SUPPORT_PROXY_URL && !_bp.devKey) {
+    _bpMsg('assistant',
+      '❌ Assistant non configuré.\n\nSaisissez votre clé API dans le champ de configuration (bouton ⚙️) ou déployez le proxy Supabase.\n\nAlternative : **contact@batipilot.fr**',
+      true, false
+    );
+    document.getElementById('bp-config-bar').classList.add('visible');
+    return;
+  }
+
+  _bp.loading = true;
+  document.getElementById('bp-send').disabled = true;
+  document.getElementById('bp-status').textContent = '● En train d\'écrire…';
+
+  // Indicateur de frappe
+  var typingEl = _bpMsg('assistant', '●●●', false, true);
+
+  // Contexte utilisateur (injecté dans le dernier message)
+  var ctx = '';
+  if (window.D) {
+    ctx = ' [Contexte: '
+      + D.chantiers.length + ' chantiers, '
+      + D.clients.length + ' clients'
+      + (D.settings.trade ? ', métier=' + D.settings.trade : '')
+      + ', plan=' + (D.settings.subscription_status || 'trial')
+      + ']';
+  }
+  var msgs = _bp.history.slice(-10).map(function(m, i, arr) {
+    if (i === arr.length - 1 && m.role === 'user') {
+      return { role: 'user', content: m.content + ctx };
+    }
+    return { role: m.role, content: m.content };
+  });
+
+  try {
+    var resp;
+
+    if (SUPPORT_PROXY_URL) {
+      /* ── MODE PROD : proxy sécurisé ─────────────────────────── */
+      // La clé Anthropic est stockée dans les secrets Supabase (côté serveur).
+      // Le proxy valide le JWT Supabase de l'utilisateur avant de relayer.
+      var jwt = '';
+      try {
+        var sess = await window.SB.auth.getSession();
+        jwt = sess.data.session ? sess.data.session.access_token : '';
+      } catch(e2) {}
+
+      resp = await fetch(SUPPORT_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + jwt,  // vérifié par le proxy
+        },
+        body: JSON.stringify({
+          system:   BP_SYS,
+          messages: msgs,
+        }),
+      });
+    } else {
+      /* ── MODE DEV : appel direct avec clé de session ─────────── */
+      // ⚠️  N'exposer JAMAIS une vraie clé en production dans ce champ.
+      // La clé est stockée en sessionStorage et disparaît à la fermeture du navigateur.
+      resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type':        'application/json',
+          'x-api-key':           _bp.devKey,
+          'anthropic-version':   '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model:      'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          system:     BP_SYS,
+          messages:   msgs,
+        }),
+      });
+    }
+
+    if (typingEl) typingEl.remove();
+
+    if (!resp.ok) {
+      var errBody = await resp.json().catch(function(){ return {}; });
+      var errMsg = (errBody.error && errBody.error.message) ? errBody.error.message : 'HTTP ' + resp.status;
+      throw new Error(errMsg);
+    }
+
+    var data = await resp.json();
+    // Le proxy retourne { reply: "..." } ; l'API directe retourne { content: [{text}] }
+    var aiText = data.reply
+      || (data.content && data.content[0] && data.content[0].text)
+      || '';
+    if (!aiText) throw new Error('Réponse vide du serveur');
+
+    _bp.history.push({ role: 'assistant', content: aiText });
+    _bpMsg('assistant', aiText);
+
+    document.getElementById('bp-status').textContent = SUPPORT_PROXY_URL
+      ? '● Disponible 24h/24'
+      : '⚠️ Mode dev — clé en session';
+
+  } catch(err) {
+    if (typingEl) typingEl.remove();
+    var m = err.message || '';
+    var friendly;
+    if (m.includes('401') || m.includes('authentication') || m.includes('invalid x-api-key')) {
+      friendly = '🔑 Clé API invalide ou expirée.\n\nVérifiez votre clé dans la barre de configuration, ou contactez **contact@batipilot.fr**.';
+    } else if (m.includes('429') || m.includes('rate')) {
+      friendly = '⏳ Trop de requêtes — patientez quelques secondes puis réessayez.';
+    } else if (m.includes('fetch') || m.includes('Failed') || m.includes('network') || m.includes('NetworkError')) {
+      friendly = '📶 Pas de connexion réseau. Vérifiez votre connexion internet et réessayez.';
+    } else if (m.includes('CORS') || m.includes('cors')) {
+      friendly = '🚧 Erreur CORS — le proxy Supabase n\'est pas encore déployé.\n\nDéployez `chat_proxy.ts` ou utilisez le mode dev (saisie de clé API).';
+    } else {
+      friendly = '⚠️ Erreur : ' + m + '\n\nRéessayez ou écrivez à **contact@batipilot.fr**.';
+    }
+    _bpMsg('assistant', friendly, true);
+    document.getElementById('bp-status').textContent = '● Erreur — réessayez';
+  }
+
+  _bp.loading = false;
+  document.getElementById('bp-send').disabled = false;
+  var inp2 = document.getElementById('bp-input');
+  if (inp2) inp2.focus();
+}
+
+/* ── Ajouter un message ───────────────────────────────────────── */
+function _bpMsg(role, text, isError, isTyping) {
+  var container = document.getElementById('bp-messages');
+  if (!container) return null;
+  var div = document.createElement('div');
+  var cls = 'bp-msg ' + role;
+  if (isError)  cls += ' error';
+  if (isTyping) cls += ' typing';
+  div.className = cls;
+  if (!isTyping && text) {
+    div.innerHTML = text
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n/g,'<br>');
+  } else if (isTyping) {
+    div.textContent = text;
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+/* ── Quick reply buttons ──────────────────────────────────────── */
+function _bpRenderQuick(btns) {
+  var c = document.getElementById('bp-quick-btns');
+  if (!c) return;
+  c.innerHTML = btns.map(function(q) {
+    var label = q;
+    var payload = q.replace(/^[^\s]+ /, ''); // enlever l'emoji si chip courte
+    return '<button class="bp-quick" onclick="bpSend(' + JSON.stringify(label) + ')">' + label + '</button>';
+  }).join('');
+}
+
+/* Exposer bpSend pour les quick buttons */
+window.bpSend = window.bpSend;
+</script>
 
 </body>
 </html>
