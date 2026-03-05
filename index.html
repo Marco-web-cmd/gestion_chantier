@@ -2772,9 +2772,13 @@ async function insert(table, row) {
 }
 async function del(table, id) {
   if (!USER || !USER.id) { toast('Session expirée — reconnectez-vous', 'error'); return; }
+  // Garde: id vide ou invalide → supprimer seulement en RAM (pas d'appel DB)
+  if (!id || id === '' || id === 'undefined' || id === 'null') {
+    console.warn('[del] id invalide pour table', table, '— suppression locale uniquement');
+    return;
+  }
   showSync();
   try {
-    // Double guard : .eq('user_id', USER.id) en plus du RLS
     const {error} = await SB.from(table).delete().eq('id', id).eq('user_id', USER.id);
     hideSync();
     if (error) { toast('Erreur de suppression : ' + error.message, 'error'); }
@@ -3252,9 +3256,11 @@ async function saveChantier(id){
   else{
     D.chantiers.unshift(data);
     if(!D.clients.find(c=>c.nom===client)){
-      const nc={id:uid(),nom:client,email:'',tel:'',adresse:'',notes:''};
+      const nc={id:uid(),nom:client,email:'',telephone:'',adresse:'',notes:''};
       D.clients.push(nc);
-      await insert('clients',nc);
+      const savedCl = await insert('clients',nc);
+      // Remplacer l'objet local par l'objet Supabase (id authoritative)
+      if(savedCl){ const ci=D.clients.findIndex(c=>c.id===nc.id); if(ci>=0)D.clients[ci]=savedCl; }
     }
   }
   toast(id ? 'Chantier mis à jour !' : 'Chantier créé !');
@@ -3418,7 +3424,7 @@ function pgDevis(){
     +'</div>'
     +'<div class="flex gap-3 mb-4"><select id="dv-sort" onchange="pgDevis()" style="width:auto"><option value="date">Trier par date</option><option value="montant">Trier par montant</option></select></div>'
     +'<div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)">'
-    +'<table><thead><tr><th>N° Devis</th><th>Réf. Chantier</th><th>Client</th><th>Date</th><th>HT</th><th>TTC</th><th>Statut <span style="font-size:10px;opacity:0.6">↩ changer</span></th><th style="width:80px"></th></tr></thead>'
+    +'<table style="width:100%"><thead><tr><th style="width:10%">N° Devis</th><th style="width:20%">Réf. Chantier</th><th style="width:15%">Client</th><th style="width:9%">Date</th><th style="width:9%">HT</th><th style="width:10%">TTC</th><th style="width:19%">Statut <span style="font-size:10px;opacity:0.6">↩ changer</span></th><th style="width:80px"></th></tr></thead>'
     +'<tbody>'+tbody+'</tbody></table></div></div>'
   );
   if(sortF==='montant'&&$('dv-sort'))$('dv-sort').value='montant';
@@ -3617,7 +3623,7 @@ async function ensureClient(nom,adresse,ville){
   if(!nom)return;
   if(D.clients.find(c=>c.nom===nom))return; // déjà présent
   const adr=[adresse,ville].filter(Boolean).join(', ');
-  const nc={id:uid(),nom,email:'',tel:'',adresse:adr,notes:''};
+  const nc={id:uid(),nom,email:'',telephone:'',adresse:adr,notes:''};
   D.clients.push(nc);
   const saved=await insert('clients',nc);
   if(saved){
@@ -3781,7 +3787,7 @@ function pgAppro(){
   const budgetCls=budgetW>=100?'red':budgetW>=80?'orange':'green';
   const alerteBudget=budgetMat>0&&budgetW>=80;
   const tbody=mats.length?mats.map(m=>`<tr><td class="td-mono" style="font-size:11px">${m.ref||'—'}</td><td><strong>${m.designation}</strong><br><span class="td-muted text-sm">${m.source||'Externe'}</span></td><td class="td-mono">${m.qte} ${m.unite||''}</td><td class="td-mono">${eur(m.prix_u)}</td><td class="td-mono">${eur(m.total)}</td><td>${statB(m.statut)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editMat('${m.id}','${selId}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="deleteMat('${m.id}','${selId}')">🗑️</button></td></tr>`).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucun matériau</div></div></td></tr>`;
-  setContent(`<div class="page-header"><div class="flex items-center gap-3"><div class="page-title">Approvisionnement</div><select id="appro-sel" onchange="pgAppro()" style="width:auto;min-width:220px;font-weight:600">${D.chantiers.map(c=>`<option value="${c.id}"${c.id===selId?' selected':''}>${c.nom} — ${c.client||''}</option>`).join('')}</select></div></div>${alerteBudget?`<div class="alert ${budgetW>=100?'alert-danger':'alert-warning'}" style="margin-bottom:16px"><span>${budgetW>=100?'🚨':'⚠️'}</span><div><strong>${budgetW>=100?'Budget matériaux DÉPASSÉ !':'Attention — Budget matériaux à '+budgetW+'%'}</strong><br>Consommé : ${eur(tot)} / Budget : ${eur(budgetMat)} — Reste : ${eur(Math.max(0,budgetMat-tot))}</div></div>`:''}<div class="kpi-grid" style="grid-template-columns:repeat(${budgetMat>0?5:4},1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Devis TTC</div><div class="kpi-value" style="font-size:18px">${eur(dv)}</div></div><div class="kpi-card orange"><div class="kpi-label">Coût matériaux</div><div class="kpi-value" style="font-size:18px">${eur(tot)}</div></div>${budgetMat>0?`<div class="kpi-card ${budgetCls}"><div class="kpi-label">Budget mat. consommé</div><div class="kpi-value" style="font-size:18px">${budgetW}%</div><div class="kpi-sub">${eur(tot)} / ${eur(budgetMat)}</div></div>`:''}<div class="kpi-card ${mg>=0?'green':'red'}"><div class="kpi-label">Marge estimée</div><div class="kpi-value" style="font-size:18px;color:${mg>=0?'var(--success)':'var(--danger)'}">${eur(mg)}</div></div><div class="kpi-card ${mr>=20?'green':mr>=10?'orange':'red'}"><div class="kpi-label">Taux marge</div><div class="kpi-value" style="font-size:24px">${mr>0?mr:0}%</div></div></div><div class="card" style="padding:0"><div class="flex items-center justify-between" style="padding:14px 20px;border-bottom:1px solid var(--border)"><div class="card-title" style="margin:0">Matériaux (${mats.length})</div><div class="flex gap-2">${mats.length?`<button class="btn btn-secondary btn-sm" onclick="printBon('${selId}')">🖨️ Bon</button><button class="btn btn-secondary btn-sm" onclick="printFiche('${selId}')">💰 Fiche</button>`:''}<button class="btn btn-primary btn-sm" onclick="modalMat('${selId}')">+ Ajouter</button></div></div><div class="table-wrapper" style="border:none"><table><thead><tr><th>Réf.</th><th>Désignation</th><th>Quantité</th><th>Prix Unit.</th><th>Total</th><th>Statut</th><th></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
+  setContent(`<div class="page-header"><div class="flex items-center gap-3"><div class="page-title">Approvisionnement</div><select id="appro-sel" onchange="pgAppro()" style="width:auto;min-width:220px;font-weight:600">${D.chantiers.map(c=>`<option value="${c.id}"${c.id===selId?' selected':''}>${c.nom} — ${c.client||''}</option>`).join('')}</select></div></div>${alerteBudget?`<div class="alert ${budgetW>=100?'alert-danger':'alert-warning'}" style="margin-bottom:16px"><span>${budgetW>=100?'🚨':'⚠️'}</span><div><strong>${budgetW>=100?'Budget matériaux DÉPASSÉ !':'Attention — Budget matériaux à '+budgetW+'%'}</strong><br>Consommé : ${eur(tot)} / Budget : ${eur(budgetMat)} — Reste : ${eur(Math.max(0,budgetMat-tot))}</div></div>`:''}<div class="kpi-grid" style="grid-template-columns:repeat(${budgetMat>0?5:4},1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Devis TTC</div><div class="kpi-value" style="font-size:18px">${eur(dv)}</div></div><div class="kpi-card orange"><div class="kpi-label">Coût matériaux</div><div class="kpi-value" style="font-size:18px">${eur(tot)}</div></div>${budgetMat>0?`<div class="kpi-card ${budgetCls}"><div class="kpi-label">Budget mat. consommé</div><div class="kpi-value" style="font-size:18px">${budgetW}%</div><div class="kpi-sub">${eur(tot)} / ${eur(budgetMat)}</div></div>`:''}<div class="kpi-card ${mg>=0?'green':'red'}"><div class="kpi-label">Marge estimée</div><div class="kpi-value" style="font-size:18px;color:${mg>=0?'var(--success)':'var(--danger)'}">${eur(mg)}</div></div><div class="kpi-card ${mr>=20?'green':mr>=10?'orange':'red'}"><div class="kpi-label">Taux marge</div><div class="kpi-value" style="font-size:24px">${mr>0?mr:0}%</div></div></div><div class="card" style="padding:0"><div class="flex items-center justify-between" style="padding:14px 20px;border-bottom:1px solid var(--border)"><div class="card-title" style="margin:0">Matériaux (${mats.length})</div><div class="flex gap-2">${mats.length?`<button class="btn btn-secondary btn-sm" onclick="printBon('${selId}')">🖨️ Bon</button><button class="btn btn-secondary btn-sm" onclick="printFiche('${selId}')">💰 Fiche</button>`:''}<button class="btn btn-primary btn-sm" onclick="modalMat('${selId}')">+ Ajouter</button></div></div><div class="table-wrapper" style="border:none"><table style="width:100%"><thead><tr><th style="width:9%">Réf.</th><th style="width:28%">Désignation</th><th style="width:10%">Quantité</th><th style="width:11%">Prix Unit.</th><th style="width:11%">Total</th><th style="width:13%">Statut</th><th style="width:80px"></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
 }
 function modalMat(chantierId=null){
   const selId=chantierId||$('appro-sel')?.value||D.chantiers[0]?.id;
@@ -3838,7 +3844,7 @@ function pgStock(){
   const tbody=stocks.length?stocks.map(s=>{const al=+s.qte<=(+s.seuil||0);return`<tr${al?' style="background:var(--danger-soft)"':''}><td class="td-mono" style="font-size:11px">${s.ref||'—'}</td><td><strong>${s.libelle}</strong>${s.fournisseur?`<br><span class="td-muted text-sm">📦 ${s.fournisseur}</span>`:''}</td><td><span class="badge badge-copper">${s.categorie||'—'}</span></td><td class="td-mono" style="color:${al?'var(--danger)':'inherit'};font-weight:${al?700:400}">${s.qte} ${s.unite||''} ${al?`<span class="badge ${+s.qte===0?'badge-red':'badge-orange'}">${+s.qte===0?'Rupture':'Bas'}</span>`:''}</td><td class="td-mono">${eur(s.prix_achat)}</td><td class="td-mono">${eur((+s.qte||0)*(+s.prix_achat||0))}</td><td class="td-muted">${s.seuil||0}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="modalStock('${s.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" title="Entrée" onclick="ajuster('${s.id}','entree')">📥</button><button class="btn btn-ghost btn-icon btn-sm" title="Sortie chantier" onclick="ajuster('${s.id}','sortie')">📤</button><button class="btn btn-ghost btn-icon btn-sm" onclick="delStock('${s.id}')">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Stock vide</div></div></td></tr>`;
   const mvs=D.mouvements.slice(0,10);
   const mvsH=mvs.length?`<div class="table-wrapper" style="border:none"><table><thead><tr><th>Date</th><th>Article</th><th>Type</th><th>Qté</th><th>Chantier / Motif</th></tr></thead><tbody>${mvs.map(m=>`<tr><td class="td-muted">${fdate(m.date)}</td><td><strong>${m.libelle||'—'}</strong>${m.ref?` <span class="td-muted">(${m.ref})</span>`:''}</td><td><span class="badge ${m.type==='Entrée'?'badge-green':'badge-orange'}">${m.type}</span></td><td class="td-mono">${m.qte}</td><td class="td-muted">${m.chantier||'—'}</td></tr>`).join('')}</tbody></table></div>`:`<div class="text-muted text-sm" style="padding:16px">Aucun mouvement enregistré.</div>`;
-  setContent(`<div class="page-header"><div class="page-title">Stock Dépôt</div></div><div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Références</div><div class="kpi-value">${D.stocks.length}</div></div><div class="kpi-card"><div class="kpi-label">Valeur totale</div><div class="kpi-value" style="font-size:18px">${eur(valTotal)}</div></div><div class="kpi-card ${alertes.length>0?'red':'green'}"><div class="kpi-label">Alertes</div><div class="kpi-value" style="color:${alertes.length>0?'var(--danger)':'var(--success)'}">${alertes.length}</div></div></div><div class="flex gap-3 mb-4"><select id="stock-cat" onchange="pgStock()" style="width:auto;min-width:160px"><option value="">Toutes catégories</option>${D.settings.categories.map(c=>`<option>${c}</option>`).join('')}</select><input id="stock-search" type="search" placeholder="🔍 Ref ou libellé..." onkeyup="pgStock()" style="width:auto;min-width:200px"></div><div class="card mb-6" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table><thead><tr><th>Réf.</th><th>Libellé / Fournisseur</th><th>Catégorie</th><th>Quantité</th><th>Prix Achat</th><th>Valeur</th><th>Seuil</th><th></th></tr></thead><tbody>${tbody}</tbody></table></div></div><div class="card"><div class="card-title">📋 Historique des mouvements (${D.mouvements.length})</div>${mvsH}</div>`);
+  setContent(`<div class="page-header"><div class="page-title">Stock Dépôt</div></div><div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Références</div><div class="kpi-value">${D.stocks.length}</div></div><div class="kpi-card"><div class="kpi-label">Valeur totale</div><div class="kpi-value" style="font-size:18px">${eur(valTotal)}</div></div><div class="kpi-card ${alertes.length>0?'red':'green'}"><div class="kpi-label">Alertes</div><div class="kpi-value" style="color:${alertes.length>0?'var(--danger)':'var(--success)'}">${alertes.length}</div></div></div><div class="flex gap-3 mb-4"><select id="stock-cat" onchange="pgStock()" style="width:auto;min-width:160px"><option value="">Toutes catégories</option>${D.settings.categories.map(c=>`<option>${c}</option>`).join('')}</select><input id="stock-search" type="search" placeholder="🔍 Ref ou libellé..." onkeyup="pgStock()" style="width:auto;min-width:200px"></div><div class="card mb-6" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table style="width:100%"><thead><tr><th style="width:8%">Réf.</th><th style="width:25%">Libellé / Fournisseur</th><th style="width:12%">Catégorie</th><th style="width:10%">Quantité</th><th style="width:11%">Prix Achat</th><th style="width:10%">Valeur</th><th style="width:8%">Seuil</th><th style="width:80px"></th></tr></thead><tbody>${tbody}</tbody></table></div></div><div class="card"><div class="card-title">📋 Historique des mouvements (${D.mouvements.length})</div>${mvsH}</div>`);
   if(catF){const e=$('stock-cat');if(e)e.value=catF;}if(searchF){const e=$('stock-search');if(e)e.value=searchF;}
 }
 function modalStock(id=null){const s=id?D.stocks.find(x=>x.id===id):null;const body=`<div class="form-row form-row-2"><div class="form-group"><label>Référence</label><input id="st-ref" value="${s?.ref||''}"></div><div class="form-group"><label>Libellé *</label><input id="st-lib" value="${s?.libelle||''}"></div></div><div class="form-row form-row-3"><div class="form-group"><label>Catégorie</label><select id="st-cat">${catOpts(s?.categorie)}</select></div><div class="form-group"><label>Quantité</label><input id="st-qte" type="number" min="0" step="0.01" value="${s?.qte||0}"></div><div class="form-group"><label>Unité</label><input id="st-u" value="${s?.unite||''}"></div></div><div class="form-row form-row-3"><div class="form-group"><label>Prix achat HT</label><input id="st-pu" type="number" min="0" step="0.01" value="${s?.prix_achat||0}"></div><div class="form-group"><label>Seuil alerte</label><input id="st-seuil" type="number" min="0" value="${s?.seuil||0}"></div><div class="form-group"><label>Fournisseur</label><input id="st-fourn" value="${s?.fournisseur||''}"></div></div>`;modal(id?'Modifier':'Nouvel article',body,`<button class="btn btn-secondary" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveStock('${id||''}')">💾 Enregistrer</button>`);}
@@ -3876,9 +3882,9 @@ function pgClients(){
   if(sortBy==='ca')clients.sort((a,b)=>b.ca-a.ca);
   else if(sortBy==='nom')clients.sort((a,b)=>a.nom.localeCompare(b.nom));
   else clients.sort((a,b)=>b.nb-a.nb);
-  const tbody=clients.length?clients.map(cl=>{const mr=cl.ca>0?Math.round(cl.marge/cl.ca*100):0;return`<tr><td><strong style="cursor:pointer" onclick="detailClient('${cl.id}')">${cl.nom}</strong></td><td class="td-muted">${cl.email||'—'}</td><td class="td-muted">${cl.tel||'—'}</td><td class="td-mono font-bold">${eur(cl.ca)}</td><td class="td-mono" style="color:${mr>=15?'var(--success)':mr>=5?'var(--warning)':'var(--danger)'}">${eur(cl.marge)} (${mr}%)</td><td><span class="badge badge-copper">${cl.nb} chantier${cl.nb>1?'s':''}</span></td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="detailClient('${cl.id}')">👁️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="modalClient('${cl.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="delClient('${cl.id}')">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">Aucun client</div></div></td></tr>`;
+  const tbody=clients.length?clients.map(cl=>{const mr=cl.ca>0?Math.round(cl.marge/cl.ca*100):0;return`<tr><td><strong style="cursor:pointer" onclick="detailClient('${cl.id}')">${cl.nom}</strong></td><td class="td-muted">${cl.email||'—'}</td><td class="td-muted">${cl.telephone||'—'}</td><td class="td-mono font-bold">${eur(cl.ca)}</td><td class="td-mono" style="color:${mr>=15?'var(--success)':mr>=5?'var(--warning)':'var(--danger)'}">${eur(cl.marge)} (${mr}%)</td><td><span class="badge badge-copper">${cl.nb} chantier${cl.nb>1?'s':''}</span></td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="detailClient('${cl.id}')">👁️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="modalClient('${cl.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="delClient('${cl.id}')">🗑️</button></td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">Aucun client</div></div></td></tr>`;
   const totalCA=clients.reduce((a,c)=>a+c.ca,0);
-  setContent(`<div class="page-header"><div class="page-title">Clients (${clients.length})</div></div><div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Clients actifs</div><div class="kpi-value">${clients.length}</div></div><div class="kpi-card"><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:18px">${eur(totalCA)}</div></div><div class="kpi-card green"><div class="kpi-label">Top client</div><div class="kpi-value" style="font-size:16px">${clients[0]?.nom||'—'}</div></div></div><div class="flex gap-3 mb-4"><select id="cl-sort" onchange="pgClients()" style="width:auto"><option value="ca">Trier par CA</option><option value="nom">Trier par nom</option><option value="nb">Trier par nb chantiers</option></select></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table><thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>CA Total</th><th>Marge</th><th>Chantiers</th><th style="width:80px"></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
+  setContent(`<div class="page-header"><div class="page-title">Clients (${clients.length})</div></div><div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px"><div class="kpi-card"><div class="kpi-label">Clients actifs</div><div class="kpi-value">${clients.length}</div></div><div class="kpi-card"><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:18px">${eur(totalCA)}</div></div><div class="kpi-card green"><div class="kpi-label">Top client</div><div class="kpi-value" style="font-size:16px">${clients[0]?.nom||'—'}</div></div></div><div class="flex gap-3 mb-4"><select id="cl-sort" onchange="pgClients()" style="width:auto"><option value="ca">Trier par CA</option><option value="nom">Trier par nom</option><option value="nb">Trier par nb chantiers</option></select></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table style="width:100%"><thead><tr><th style="width:28%">Nom</th><th style="width:16%">Email</th><th style="width:13%">Téléphone</th><th style="width:13%">CA Total</th><th style="width:14%">Marge</th><th style="width:12%">Chantiers</th><th style="width:80px"></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
   if(sortBy){const e=$('cl-sort');if(e)e.value=sortBy;}
 }
 function detailClient(id){
@@ -3902,7 +3908,7 @@ function detailClient(id){
     +'<div class="kpi-card '+(mr>=20?'green':mr>=5?'orange':'red')+'"><div class="kpi-label">Marge</div><div class="kpi-value" style="font-size:18px">'+eur(marge)+'</div><div class="kpi-sub">'+mr+'%</div></div>'
     +'</div>'
     +'<div style="font-size:12px;line-height:2;color:var(--text-muted);margin-bottom:16px">'
-    +(cl.tel?'📞 '+cl.tel+'<br>':'')+(cl.email?'📧 '+cl.email+'<br>':'')+(cl.adresse?'📍 '+cl.adresse:'')
+    +(cl.telephone?'📞 '+cl.telephone+'<br>':'')+(cl.email?'📧 '+cl.email+'<br>':'')+(cl.adresse?'📍 '+cl.adresse:'')
     +'</div>'
     +'<div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">🚧 Chantiers ('+ch.length+')</div>'
     +chH
@@ -3915,8 +3921,8 @@ function detailClient(id){
     'modal-lg'
   );
 }
-function modalClient(id=null){const cl=id?D.clients.find(x=>x.id===id):null;const body=`<div class="form-row form-row-2"><div class="form-group"><label>Nom *</label><input id="cl-nom" value="${cl?.nom||''}"></div><div class="form-group"><label>Email</label><input id="cl-email" type="email" value="${cl?.email||''}"></div></div><div class="form-row form-row-2"><div class="form-group"><label>Téléphone</label><input id="cl-tel" type="tel" value="${cl?.tel||''}"></div><div class="form-group"><label>Adresse</label><input id="cl-adr" value="${cl?.adresse||''}"></div></div><div class="form-group"><label>Notes</label><textarea id="cl-notes">${cl?.notes||''}</textarea></div>`;modal(id?'Modifier':'Nouveau client',body,`<button class="btn btn-secondary" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveClient('${id||''}')">💾 Enregistrer</button>`);}
-async function saveClient(id){const nom=$('cl-nom').value.trim();if(!nom){toast('Nom obligatoire','error');return;}const data={id:id||uid(),nom,email:$('cl-email').value.trim(),tel:$('cl-tel').value.trim(),adresse:$('cl-adr').value.trim(),notes:$('cl-notes').value.trim()};const _okCl=await upsert('clients',data);if(!_okCl)return;closeModal();if(id){const idx=D.clients.findIndex(c=>c.id===id);if(idx>=0)D.clients[idx]=data;}else D.clients.push(data);toast(id?'Mis à jour !':'Client ajouté !');pgClients();}
+function modalClient(id=null){const cl=id?D.clients.find(x=>x.id===id):null;const body=`<div class="form-row form-row-2"><div class="form-group"><label>Nom *</label><input id="cl-nom" value="${cl?.nom||''}"></div><div class="form-group"><label>Email</label><input id="cl-email" type="email" value="${cl?.email||''}"></div></div><div class="form-row form-row-2"><div class="form-group"><label>Téléphone</label><input id="cl-tel" type="tel" value="${cl?.telephone||''}"></div><div class="form-group"><label>Adresse</label><input id="cl-adr" value="${cl?.adresse||''}"></div></div><div class="form-group"><label>Notes</label><textarea id="cl-notes">${cl?.notes||''}</textarea></div>`;modal(id?'Modifier':'Nouveau client',body,`<button class="btn btn-secondary" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveClient('${id||''}')">💾 Enregistrer</button>`);}
+async function saveClient(id){const nom=$('cl-nom').value.trim();if(!nom){toast('Nom obligatoire','error');return;}const data={id:id||uid(),nom,email:$('cl-email').value.trim(),telephone:$('cl-tel').value.trim(),adresse:$('cl-adr').value.trim(),notes:$('cl-notes').value.trim()};const _okCl=await upsert('clients',data);if(!_okCl)return;closeModal();if(id){const idx=D.clients.findIndex(c=>c.id===id);if(idx>=0)D.clients[idx]=data;}else D.clients.push(data);toast(id?'Mis à jour !':'Client ajouté !');pgClients();}
 async function delClient(id){ delClientSafe(id); }
 
 // ── PLANNING CALENDRIER ───────────────────────────
@@ -3952,7 +3958,7 @@ function pgFinances(){
   const ca=ch.reduce((a,c)=>a+(+c.devis||0),0),couts=ch.reduce((a,c)=>a+(+c.cout_mat||0),0)+totalMO,marge=ca-couts,mr=ca>0?(marge/ca*100).toFixed(1):0;
   const facTotal=D.factures.reduce((a,f)=>a+(+f.montant||0),0);
   const tbody=ch.filter(c=>+c.devis>0).sort((a,b)=>+b.marge-+a.marge).map(c=>{const cm=+c.cout_mat||0,dv=+c.devis||0,mg=dv-cm,r=dv>0?Math.round(mg/dv*100):0,bw=dv>0?Math.min(100,cm/dv*100):0;const fs=D.factures.filter(f=>f.chantier_id===c.id),fs2=fs.reduce((a,f)=>a+(+f.montant||0),0);return`<tr><td><strong>${c.nom}</strong><br><span class="td-muted text-sm">${c.client||''}</span></td><td>${etatB(c.etat)}</td><td class="td-mono">${eur(dv)}</td><td class="td-mono">${eur(cm)}<div class="progress-bar" style="margin-top:4px;width:80px"><div class="progress-fill ${bw>80?'red':''}" style="width:${bw}%"></div></div></td><td class="td-mono text-muted">${eur(fs2)}</td><td class="td-mono" style="color:${r>=20?'var(--success)':r>=10?'var(--warning)':'var(--danger)'};font-weight:700">${eur(mg)}<br><span style="font-size:11px">${r}%</span></td><td><button class="btn btn-secondary btn-sm" onclick="printFiche('${c.id}')">📄</button></td></tr>`}).join('');
-  setContent(`<div class="page-header"><div class="page-title">Finances</div></div><div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:20px">${eur(ca)}</div></div><div class="kpi-card orange"><div class="kpi-label">Coûts Mat.</div><div class="kpi-value" style="font-size:20px">${eur(couts)}</div></div><div class="kpi-card"><div class="kpi-label">Factures achat</div><div class="kpi-value" style="font-size:20px">${eur(facTotal)}</div></div><div class="kpi-card ${+mr>=20?'green':+mr>=10?'orange':'red'}"><div class="kpi-label">Marge Brute</div><div class="kpi-value" style="font-size:20px">${eur(marge)}</div><div class="kpi-sub">${mr}%</div></div></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table><thead><tr><th>Chantier</th><th>État</th><th>Devis TTC</th><th>Coût Mat.</th><th>Factures</th><th>Marge</th><th></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
+  setContent(`<div class="page-header"><div class="page-title">Finances</div></div><div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">CA Total</div><div class="kpi-value" style="font-size:20px">${eur(ca)}</div></div><div class="kpi-card orange"><div class="kpi-label">Coûts Mat.</div><div class="kpi-value" style="font-size:20px">${eur(couts)}</div></div><div class="kpi-card"><div class="kpi-label">Factures achat</div><div class="kpi-value" style="font-size:20px">${eur(facTotal)}</div></div><div class="kpi-card ${+mr>=20?'green':+mr>=10?'orange':'red'}"><div class="kpi-label">Marge Brute</div><div class="kpi-value" style="font-size:20px">${eur(marge)}</div><div class="kpi-sub">${mr}%</div></div></div><div class="card" style="padding:0"><div class="table-wrapper" style="border:none;border-radius:var(--radius-lg)"><table style="width:100%"><thead><tr><th style="width:28%">Chantier</th><th style="width:9%">État</th><th style="width:13%">Devis TTC</th><th style="width:13%">Coût Mat.</th><th style="width:13%">Factures</th><th style="width:16%">Marge</th><th style="width:80px"></th></tr></thead><tbody>${tbody}</tbody></table></div></div>`);
 }
 
 // ── ABONNEMENT ────────────────────────────────────
@@ -4655,7 +4661,7 @@ function pgSalaires() {
           +'<div class="card-title" style="margin:0">Équipe & coûts ('+emps.length+')</div>'
         +'</div>'
         +'<div class="table-wrapper" style="border:none">'
-          +'<table><thead><tr><th>Nom / Qualification</th><th>Équipe</th><th>Type</th><th>Taux brut</th><th>Coût chargé</th><th>Mensuel</th><th></th></tr></thead>'
+          +'<table style="width:100%"><thead><tr><th style="width:25%">Nom / Qualification</th><th style="width:13%">Équipe</th><th style="width:10%">Type</th><th style="width:12%">Taux brut</th><th style="width:12%">Coût chargé</th><th style="width:12%">Mensuel</th><th style="width:80px"></th></tr></thead>'
           +'<tbody>'+empRows+'</tbody></table>'
         +'</div>'
       +'</div>'
@@ -4664,7 +4670,7 @@ function pgSalaires() {
           +'<div class="card-title" style="margin:0">⏱ Derniers pointages ('+entries.length+')</div>'
         +'</div>'
         +'<div class="table-wrapper" style="border:none">'
-          +'<table><thead><tr><th>Date</th><th>Employé</th><th>Chantier</th><th>Heures</th><th>Coût</th><th>Statut</th><th></th></tr></thead>'
+          +'<table style="width:100%"><thead><tr><th style="width:10%">Date</th><th style="width:20%">Employé</th><th style="width:25%">Chantier</th><th style="width:10%">Heures</th><th style="width:11%">Coût</th><th style="width:10%">Statut</th><th style="width:80px"></th></tr></thead>'
           +'<tbody>'+ptRows+'</tbody></table>'
         +'</div>'
       +'</div>'
@@ -4674,7 +4680,7 @@ function pgSalaires() {
         +'<div class="card-title" style="margin:0">💹 Rentabilité chantiers (MO incluse)</div>'
       +'</div>'
       +'<div class="table-wrapper" style="border:none">'
-        +'<table><thead><tr><th>Chantier</th><th>CA (devis)</th><th>Coût Mat.</th><th>Coût MO</th><th>Coût total</th><th>Marge</th><th>Écart MO prévu</th><th></th></tr></thead>'
+        +'<table style="width:100%"><thead><tr><th style="width:22%">Chantier</th><th style="width:11%">CA (devis)</th><th style="width:11%">Coût Mat.</th><th style="width:10%">Coût MO</th><th style="width:11%">Coût total</th><th style="width:10%">Marge</th><th style="width:13%">Écart MO prévu</th><th style="width:80px"></th></tr></thead>'
         +'<tbody>'+rentRows+'</tbody></table>'
       +'</div>'
     +'</div>'
@@ -5709,9 +5715,9 @@ function pgFacturation() {
       + '<div style="font-family:var(--font-display);font-weight:700">Factures (' + fcs.length + ')</div>'
       + '<button class="btn btn-ghost btn-sm" onclick="exportCSVFacturesClient()">⬇️ CSV</button>'
     + '</div>'
-    + '<div style="overflow-x:auto"><table><thead><tr>'
-      + '<th>N° Facture</th><th>Date</th><th>Client / Chantier</th>'
-      + '<th class="text-right">Montant TTC</th><th>Statut</th><th>Actions</th>'
+    + '<div style="overflow-x:auto"><table style="width:100%"><thead><tr>'
+      + '<th style="width:12%">N° Facture</th><th style="width:9%">Date</th><th style="width:32%">Client / Chantier</th>'
+      + '<th style="width:14%" class="text-right">Montant TTC</th><th style="width:11%">Statut</th><th style="width:80px">Actions</th>'
     + '</tr></thead><tbody>' + tbody + '</tbody></table></div></div>'
   );
 }
@@ -6383,7 +6389,9 @@ function delClientSafe(id) {
     warning: chantiers.length ? '⚠️ Ce client est associé à ' + chantiers.length + ' chantier(s).' : null,
     onConfirm: async function() {
       D.clients = D.clients.filter(function(c){ return c.id !== id; });
-      await del('clients', id);
+      if (id && id !== '' && id !== 'undefined') {
+        await del('clients', id);
+      }
       toast('Client supprimé', 'error');
       pgClients();
     }
