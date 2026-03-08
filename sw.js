@@ -16,7 +16,7 @@
 /* ── Version du cache ──────────────────────────────────────── */
 /* ⚠️  Incrémentez CACHE_VERSION à chaque déploiement pour
        forcer le rechargement chez tous les utilisateurs.      */
-var CACHE_VERSION = 'batipilot-v16';
+var CACHE_VERSION = 'batipilot-v17';
 var CACHE_NAME    = CACHE_VERSION;
 
 /* ── Assets à précacher à l'installation ──────────────────── */
