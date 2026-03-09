@@ -1230,6 +1230,49 @@ tbody tr:last-child td{border-bottom:none;}
   th,td{padding:9px 10px;}
   .modal{border-radius:var(--radius-lg);}
   .dv-lignes-header,.dv-ligne{grid-template-columns:1fr 70px 70px 85px 30px;gap:5px;}
+
+  /* ── Drawer "Plus" mobile ── */
+  #mobile-more-drawer{
+    display:none;
+    position:fixed;
+    bottom:60px;left:0;right:0;
+    background:var(--navy-dark);
+    border-top:1px solid rgba(255,255,255,0.1);
+    border-radius:20px 20px 0 0;
+    z-index:201;
+    padding:16px;
+    max-height:55vh;
+    overflow-y:auto;
+    box-shadow:0 -8px 32px rgba(0,0,0,0.3);
+  }
+  #mobile-more-drawer.open{display:block;}
+  .mob-drawer-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+    margin-top:12px;
+  }
+  .mob-drawer-item{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:12px 8px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.07);
+    color:rgba(255,255,255,0.8);
+    font-size:12px;font-weight:500;
+    cursor:pointer;
+    text-align:center;
+    transition:background 0.15s;
+  }
+  .mob-drawer-item:hover,.mob-drawer-item:active{background:rgba(255,255,255,0.14);color:#fff;}
+
+  /* ── Sidebar overlay ── */
+  #sidebar-overlay{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(17,24,39,0.5);
+    z-index:199;
+  }
+  #sidebar-overlay.open{display:block;}
 }
 @media (max-width:480px){
   .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;}
@@ -1253,6 +1296,17 @@ tbody tr:last-child td{border-bottom:none;}
 }
 .cp-suggest-item:last-child{border-bottom:none;}
 .cp-suggest-item:hover{background:var(--bg-hover);color:var(--navy);}
+
+
+#sidebar-overlay{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(17,24,39,0.45);
+  z-index:199;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+#sidebar-overlay.open{display:block;}
 
 /* ── Utility helpers ─── */
 .flex{display:flex;} .items-center{align-items:center;} .justify-between{justify-content:space-between;}
@@ -3337,7 +3391,7 @@ async function doResetPwd() {
     hideLoader();
     $('auth-screen').style.display = 'flex';
     if (error) { authMsg('Erreur : ' + error.message, 'error'); return; }
-    authMsg('📧 Email envoyé ! Vérifiez votre boîte mail et cliquez sur le lien pour créer un nouveau mot de passe.', 'success');
+    authMsg('📧 Lien envoyé ! Vérifiez votre boîte mail (et les spams). Le lien expire dans 1 heure. Si rien reçu sous 5 min, contactez contact@bati-pilot.fr', 'ok');
   } catch(e) {
     hideLoader();
     $('auth-screen').style.display = 'flex';
@@ -3893,7 +3947,7 @@ const PAGE_TITLES={dashboard:'Tableau de bord',chantiers:'Chantiers',devis:'Devi
 function openMobileSidebar(){
   const sb = $('sidebar');
   const ov = $('sidebar-overlay');
-  if (sb) sb.classList.add('mobile-open');
+  if (sb) sb.classList.add('mob-open');
   if (ov) {
     ov.classList.add('open');
     ov.onclick = closeMobileSidebar;
@@ -3904,7 +3958,7 @@ function openMobileSidebar(){
 function closeMobileSidebar(){
   const sb = $('sidebar');
   const ov = $('sidebar-overlay');
-  if (sb) sb.classList.remove('mobile-open');
+  if (sb) sb.classList.remove('mob-open');
   if (ov) ov.classList.remove('open');
   document.body.style.overflow = '';
 }
