@@ -32,8 +32,9 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 .loader-text{color:rgba(255,255,255,0.4);font-size:13px;margin-top:14px;}
-#auth-screen{position:fixed;inset:0;background:var(--bg-sidebar);display:none;align-items:center;justify-content:center;z-index:2000;overflow-y:auto;padding:20px;}
-.auth-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:48px;width:90%;max-width:440px;box-shadow:var(--shadow-lg);animation:fadeIn 0.4s ease;}
+#auth-screen{position:fixed;inset:0;background:var(--bg-sidebar);display:none;align-items:center;justify-content:center;z-index:2000;overflow-y:auto;padding:20px;box-sizing:border-box;}
+.auth-card{background:var(--bg-card);border-radius:var(--radius-lg);padding:32px;width:min(440px,92vw);max-width:440px;box-shadow:var(--shadow-lg);animation:fadeIn 0.4s ease;max-height:92dvh;overflow-y:auto;box-sizing:border-box;}
+.auth-card input:not([type=checkbox]),.auth-card select,.auth-card textarea,.auth-card button{max-width:100%;box-sizing:border-box;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .auth-logo{font-family:var(--font-display);font-size:32px;font-weight:900;text-align:center;margin-bottom:4px;}.auth-logo span{color:var(--accent);}
 .auth-sub{font-size:12px;color:var(--text-muted);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:36px;}
@@ -144,7 +145,7 @@ html{font-size:15px;color-scheme:light;}body{font-family:var(--font-body);backgr
 .form-row{display:grid;gap:14px;margin-bottom:16px;}
 .form-row-2{grid-template-columns:1fr 1fr;}.form-row-3{grid-template-columns:1fr 1fr 1fr;}.form-row-4{grid-template-columns:1fr 1fr 1fr 1fr;}
 label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--text-muted);margin-bottom:6px;}
-input,select,textarea{width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font-body);font-size:14px;color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+input:not([type=checkbox]):not([type=radio]),select,textarea{width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font-body);font-size:14px;color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,98,42,0.14),0 1px 4px rgba(28,30,34,0.08);}
 textarea{resize:vertical;min-height:80px;}
 select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7670' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
@@ -480,7 +481,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
   .devis-line input { font-size: 14px !important; }
 
   /* ── Input font-size ≥ 16px : évite le zoom automatique iOS Safari ── */
-  input, select, textarea {
+  input:not([type=checkbox]):not([type=radio]), select, textarea {
     font-size: 16px !important;
   }
   /* Exceptions : petits champs stylisés (gardent une taille réduite mais restent > 16px visuellement) */
@@ -511,6 +512,11 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible){outline:none;}
   .kpi-card { padding: 12px 14px; }
   .kpi-value { font-size: 20px; }
   .kpi-label { font-size: 11px; }
+  /* Auth card sur mobile */
+  .auth-card { padding: 20px 16px !important; width: min(96vw, 420px) !important; box-sizing: border-box !important; }
+  .auth-card input, .auth-card select, .auth-card textarea { max-width: 100% !important; box-sizing: border-box !important; }
+  .auth-card label { max-width: 100% !important; box-sizing: border-box !important; }
+  .auth-logo img { height: 40px !important; }
 }
 
 /* ── Print ──────────────────────────────────────────────────────── */
@@ -707,9 +713,9 @@ body.ct-mode #topbar { display: none !important; }
         <label style="font-size:12px;color:var(--text-muted)">Code partenaire <span style="font-weight:400">(optionnel)</span></label>
         <input id="s-code" type="text" placeholder="Ex: PARTENAIRE2024" style="font-size:13px">
       </div>
-      <label style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:12px;background:var(--bg-input);border-radius:8px;cursor:pointer">
+      <label style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:12px;background:var(--bg-input);border-radius:8px;cursor:pointer;width:100%;box-sizing:border-box;">
         <input type="checkbox" id="s-rgpd" style="margin-top:2px;flex-shrink:0">
-        <span style="font-size:12px;color:var(--text-muted);line-height:1.6">
+        <span style="font-size:12px;color:var(--text-muted);line-height:1.6;flex:1;">
           J'accepte les <a href="#" onclick="event.stopPropagation();go('legal')" style="color:var(--accent)">CGV</a>
           et la <a href="#" onclick="event.stopPropagation();go('rgpd')" style="color:var(--accent)">politique de confidentialité</a>.
           Données hébergées en Europe.
