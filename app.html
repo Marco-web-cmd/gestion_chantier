@@ -879,6 +879,7 @@ body.ct-mode #topbar { display: none !important; }
       <div class="nav-item" onclick="go('finances')"><span class="nav-ico">💰</span>Finances</div>
       <div class="nav-item" onclick="go('facturation')"><span class="nav-ico">🧾</span>Facturation</div>
       <div class="nav-label">Compte</div>
+      <div class="nav-item" onclick="go('justificatifs')"><span class="nav-ico">🧾</span>Justificatifs</div>
       <div class="nav-item" onclick="go('salaires')"><span class="nav-ico">💶</span>Masse Salariale</div>
       <div class="nav-item" onclick="go('conducteur')"><span class="nav-ico">👷</span>Conducteur</div>
       <div class="nav-item" onclick="go('abonnement')"><span class="nav-ico">💳</span>Abonnement</div>
@@ -2332,9 +2333,12 @@ async function loadAll(){
         assurance_decennale:sr.data.assurance_decennale||'',
         rcp:sr.data.rcp||'',
         qualibat:sr.data.qualibat||'',
+        email_comptable:sr.data.email_comptable||'',
+        historique_envois_comptable:sr.data.historique_envois_comptable||[],
       };
     }
     D.chantiers       = cr.data   || [];
+    D.justificatifs   = sr.data && sr.data.justificatifs ? sr.data.justificatifs : [];
     D.clients         = clr.data  || [];
     D.devis_docs      = dr.data   || [];
     D.factures        = fr.data   || [];
@@ -2700,7 +2704,7 @@ function go(page){
   if (contentEl) contentEl.scrollTop = 0;
   window.scrollTo(0, 0);
 
-  const pages={dashboard:pgDashboardPro,chantiers:pgChantiers,devis:pgDevis,appro:pgAppro,stock:pgStock,clients:pgClients,planning:pgPlanning,finances:pgFinances,salaires:pgSalaires,facturation:pgFacturation,abonnement:pgAbonnement,settings:pgSettings,conducteur:pgConducteur,rgpd:pgRGPD,legal:pgLegal,logs:pgActivityLog};
+  const pages={dashboard:pgDashboardPro,chantiers:pgChantiers,devis:pgDevis,appro:pgAppro,stock:pgStock,clients:pgClients,planning:pgPlanning,finances:pgFinances,salaires:pgSalaires,facturation:pgFacturation,abonnement:pgAbonnement,settings:pgSettings,justificatifs:pgJustificatifs,conducteur:pgConducteur,rgpd:pgRGPD,legal:pgLegal,logs:pgActivityLog};
   window._currentPage = page;
   if(pages[page])pages[page]();
 
@@ -5300,6 +5304,254 @@ async function updateDevisStatut(dvId, newStatut){
   dv.statut=newStatut;
   await SB.from('devis_docs').update({statut:newStatut}).eq('id',dvId).eq('user_id',USER.id);
   toast('Devis '+dv.numero+' → '+newStatut);
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// PAGE JUSTIFICATIFS & COMPTABILITÉ
+// ══════════════════════════════════════════════════════════════
+function pgJustificatifs() {
+  var justs = D.justificatifs || [];
+  var s = D.settings;
+  var cats = ['Matériaux','Carburant','Repas','Outillage','Sous-traitance','Déplacement','Autre'];
+  var now = new Date();
+  var moisCourant = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  var justs_mois = justs.filter(function(j){ return j.date && j.date.startsWith(moisCourant); });
+  var total_mois = justs_mois.reduce(function(a,j){ return a + (parseFloat(j.montant)||0); }, 0);
+
+  var listHTML = justs.length === 0
+    ? '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-title">Aucun justificatif</div><div class="empty-sub">Prenez en photo vos tickets et factures fournisseurs</div></div>'
+    : justs.slice().reverse().map(function(j,i) {
+        var idx = justs.length - 1 - i;
+        var statusColor = j.envoye ? 'var(--success)' : 'var(--warning)';
+        var statusLabel = j.envoye ? '&#x2705; Envoyé' : '&#x23F3; À envoyer';
+        return '<div class="card mb-2" style="display:flex;align-items:center;gap:12px;padding:14px">'
+          + '<div style="font-size:28px;flex-shrink:0">🧾</div>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="font-weight:600;color:var(--text)">' + (j.fournisseur||'Sans nom') + '</div>'
+          + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">' + (j.categorie||'Non catégorisé') + ' · ' + (j.date||'') + '</div>'
+          + (j.note ? '<div style="font-size:12px;color:var(--text-muted);font-style:italic">' + j.note + '</div>' : '')
+          + '</div>'
+          + '<div style="text-align:right;flex-shrink:0">'
+          + '<div style="font-weight:700;font-size:16px">' + _fmt(j.montant||0) + '</div>'
+          + '<div style="font-size:11px;color:' + statusColor + ';margin-top:2px">' + statusLabel + '</div>'
+          + '</div>'
+          + '<button class="btn btn-ghost btn-icon btn-sm" onclick="delJustif(' + idx + ')" style="color:var(--danger);flex-shrink:0">x</button>'
+          + '</div>';
+      }).join('');
+
+  var emailWarning = !s.email_comptable
+    ? '<div style="background:rgba(192,98,42,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--accent)">&#x26A0;&#xFE0F; Renseignez l\'email de votre comptable ci-dessous.</div>'
+    : '';
+
+  var histHTML = (s.historique_envois_comptable||[]).length === 0
+    ? '<div class="text-muted text-sm">Aucun envoi pour le moment.</div>'
+    : (s.historique_envois_comptable||[]).slice().reverse().slice(0,5).map(function(h){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">'
+          + '<div><span style="font-weight:600">' + h.periode + '</span><br><span style="color:var(--text-muted)">' + h.nb + ' justificatif' + (h.nb>1?'s':'') + ' · ' + _fmt(h.total) + '</span></div>'
+          + '<div style="color:var(--success);font-size:12px">OK ' + h.date + '</div>'
+          + '</div>';
+      }).join('');
+
+  var catsOpts = cats.map(function(c){return '<option>'+c+'</option>';}).join('');
+
+  setContent('<div class="page-header"><div class="page-title">Justificatifs &amp; Comptabilité</div></div>'
+  + '<div class="grid-2" style="align-items:start;gap:20px">'
+
+  + '<div>'
+  + '<div class="card mb-4" style="background:linear-gradient(135deg,var(--navy),#2D3E8C);color:white;padding:20px">'
+  + '<div style="font-size:12px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total ce mois</div>'
+  + '<div style="font-family:var(--font-display);font-size:32px;font-weight:900">' + _fmt(total_mois) + '</div>'
+  + '<div style="font-size:13px;opacity:0.8;margin-top:4px">' + justs_mois.length + ' justificatif' + (justs_mois.length>1?'s':'') + ' · ' + moisCourant + '</div>'
+  + '</div>'
+
+  + '<div class="card mb-4">'
+  + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">Ajouter un justificatif</div>'
+  + '<div class="form-row form-row-2">'
+  + '<div class="form-group"><label>Fournisseur</label><input id="jf-fourn" placeholder="Ex: Leroy Merlin..."></div>'
+  + '<div class="form-group"><label>Montant TTC (€)</label><input id="jf-montant" type="number" step="0.01" min="0" placeholder="0.00"></div>'
+  + '</div>'
+  + '<div class="form-row form-row-2">'
+  + '<div class="form-group"><label>Date</label><input id="jf-date" type="date" value="' + now.toISOString().slice(0,10) + '"></div>'
+  + '<div class="form-group"><label>Catégorie</label><select id="jf-cat">' + catsOpts + '</select></div>'
+  + '</div>'
+  + '<div class="form-group"><label>Note (optionnel)</label><input id="jf-note" placeholder="Ex: Chantier Dupont, plomberie..."></div>'
+  + '<div class="form-group"><label>Photo du ticket (optionnel)</label>'
+  + '<input id="jf-photo" type="file" accept="image/*" capture="environment" style="padding:8px;font-size:13px">'
+  + '<div id="jf-ocr-result" style="display:none;margin-top:8px;padding:10px;background:rgba(45,62,140,0.08);border-radius:8px;font-size:13px"></div>'
+  + '</div>'
+  + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+  + '<button class="btn btn-primary" onclick="addJustif()">Enregistrer</button>'
+  + '<button class="btn btn-ghost btn-sm" onclick="ocrTicket()" id="btn-ocr">Lire par IA</button>'
+  + '</div></div>'
+
+  + '<div class="card">'
+  + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">'
+  + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700">Tous les justificatifs (' + justs.length + ')</div>'
+  + (justs.length > 0 ? '<button class="btn btn-ghost btn-sm" onclick="exportJustifCSV()">Export CSV</button>' : '')
+  + '</div>' + listHTML + '</div></div>'
+
+  + '<div>'
+  + '<div class="card mb-4">'
+  + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">Envoyer à mon comptable</div>'
+  + emailWarning
+  + '<div class="form-group"><label>Email du comptable</label>'
+  + '<div style="display:flex;gap:8px">'
+  + '<input id="jf-email-cpt" type="email" value="' + (s.email_comptable||'') + '" placeholder="comptable@cabinet.fr" style="flex:1">'
+  + '<button class="btn btn-ghost btn-sm" onclick="saveEmailComptable()" style="flex-shrink:0">Sauv.</button>'
+  + '</div>'
+  + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Modifiez puis cliquez Sauv. pour enregistrer</div>'
+  + '</div>'
+  + '<div class="form-row form-row-2" style="margin-bottom:12px">'
+  + '<div class="form-group"><label>Période</label><select id="jf-periode"><option value="mois">Ce mois (' + moisCourant + ')</option><option value="tout">Tous non envoyés</option></select></div>'
+  + '<div class="form-group"><label>Format</label><select id="jf-format"><option value="recapitulatif">Récapitulatif email</option><option value="csv">Export CSV</option></select></div>'
+  + '</div>'
+  + '<button class="btn btn-primary w-full" onclick="envoyerComptable()" ' + (!s.email_comptable?'disabled':'') + '>Envoyer le récapitulatif</button>'
+  + '<div id="jf-send-status" style="margin-top:10px;font-size:13px;text-align:center"></div>'
+  + '</div>'
+
+  + '<div class="card">'
+  + '<div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">Historique des envois</div>'
+  + histHTML
+  + '</div></div></div>');
+}
+
+function addJustif() {
+  var fourn   = $('jf-fourn')   ? $('jf-fourn').value.trim()        : '';
+  var montant = $('jf-montant') ? parseFloat($('jf-montant').value)  : 0;
+  var date    = $('jf-date')    ? $('jf-date').value                 : new Date().toISOString().slice(0,10);
+  var cat     = $('jf-cat')     ? $('jf-cat').value                  : 'Autre';
+  var note    = $('jf-note')    ? $('jf-note').value.trim()          : '';
+  if (!fourn)              { toast('Renseignez le fournisseur'); return; }
+  if (!montant || montant <= 0) { toast('Montant invalide');    return; }
+  if (!D.justificatifs) D.justificatifs = [];
+  D.justificatifs.push({ id:Date.now(), fournisseur:fourn, montant:montant, date:date, categorie:cat, note:note, envoye:false, created_at:new Date().toISOString() });
+  saveJustificatifs();
+  toast('Justificatif enregistré !');
+  pgJustificatifs();
+}
+
+function delJustif(idx) {
+  if (!confirm('Supprimer ce justificatif ?')) return;
+  D.justificatifs.splice(idx, 1);
+  saveJustificatifs();
+  pgJustificatifs();
+}
+
+async function saveJustificatifs() {
+  try {
+    await SB.from('settings').upsert({ user_id:USER.id, justificatifs:D.justificatifs||[] }, { onConflict:'user_id' });
+  } catch(e) { console.warn('saveJustificatifs:', e); }
+}
+
+async function saveEmailComptable() {
+  var email = $('jf-email-cpt') ? $('jf-email-cpt').value.trim() : '';
+  if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { toast('Email invalide'); return; }
+  D.settings.email_comptable = email;
+  await saveSetting();
+  toast('Email comptable enregistré !');
+  pgJustificatifs();
+}
+
+async function ocrTicket() {
+  var fileInput = $('jf-photo');
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) { toast('Ajoutez une photo du ticket'); return; }
+  var btn = $('btn-ocr');
+  var result = $('jf-ocr-result');
+  if (btn) { btn.disabled = true; btn.textContent = 'Lecture...'; }
+  try {
+    var file = fileInput.files[0];
+    var b64 = await new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},
+      body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:300,
+        messages:[{ role:'user', content:[
+          { type:'image', source:{ type:'base64', media_type:file.type, data:b64 } },
+          { type:'text', text:'Lis ce ticket ou facture. Extrais: fournisseur, montant_ttc (nombre), date (YYYY-MM-DD). Reponds UNIQUEMENT en JSON: {"fournisseur":"...","montant_ttc":0.00,"date":"YYYY-MM-DD"}' }
+        ]}]
+      })
+    });
+    var data = await resp.json();
+    var text = data.content && data.content[0] ? data.content[0].text : '';
+    var parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if (parsed.fournisseur && $('jf-fourn')) $('jf-fourn').value = parsed.fournisseur;
+    if (parsed.montant_ttc && $('jf-montant')) $('jf-montant').value = parsed.montant_ttc;
+    if (parsed.date && $('jf-date')) $('jf-date').value = parsed.date;
+    if (result) { result.style.display='block'; result.innerHTML='IA a lu : ' + parsed.fournisseur + ' · ' + _fmt(parsed.montant_ttc) + ' · ' + parsed.date; }
+    toast('Ticket lu !');
+  } catch(e) { toast('Impossible de lire le ticket'); }
+  finally { if (btn) { btn.disabled=false; btn.textContent='Lire par IA'; } }
+}
+
+async function envoyerComptable() {
+  var email = D.settings.email_comptable;
+  if (!email) { toast('Email comptable non renseigné'); return; }
+  var periode = $('jf-periode') ? $('jf-periode').value : 'mois';
+  var now = new Date();
+  var moisCourant = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  var justs = D.justificatifs || [];
+  var aEnvoyer = periode === 'mois'
+    ? justs.filter(function(j){ return j.date && j.date.startsWith(moisCourant); })
+    : justs.filter(function(j){ return !j.envoye; });
+  if (aEnvoyer.length === 0) { toast('Aucun justificatif à envoyer'); return; }
+  var statusEl = $('jf-send-status');
+  if (statusEl) statusEl.innerHTML = 'Envoi en cours...';
+  var total = aEnvoyer.reduce(function(a,j){ return a+(parseFloat(j.montant)||0); },0);
+  var lignes = aEnvoyer.map(function(j){ return (j.date||'') + ' | ' + (j.fournisseur||'?') + ' | ' + (j.categorie||'') + ' | ' + _fmt(j.montant||0) + (j.note?' | '+j.note:''); }).join('\n');  var company = D.settings.company || 'Mon entreprise';
+  var sujet = 'Justificatifs ' + company + ' - ' + (periode==='mois' ? moisCourant : 'Envoi groupe');
+  var corps = 'Bonjour,
+
+Voici le recapitulatif des justificatifs de ' + company + ' :
+
+Periode : ' + (periode==='mois' ? moisCourant : 'Non encore envoyes') + '
+Nombre : ' + aEnvoyer.length + ' justificatif' + (aEnvoyer.length>1?'s':'') + '
+Total TTC : ' + _fmt(total) + '
+
+Detail :
+' + lignes + '
+
+Cordialement,
+' + company;
+  try {
+    var r = await fetch('https://zewyecoxpmycqdziuqzc.supabase.co/functions/v1/send-email', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer ' + (SB.supabaseKey||'')},
+      body:JSON.stringify({ to:email, subject:sujet, text:corps })
+    });
+    if (r.ok) {
+      var ids = aEnvoyer.map(function(j){ return j.id; });
+      D.justificatifs.forEach(function(j){ if (ids.indexOf(j.id)>-1) j.envoye=true; });
+      if (!D.settings.historique_envois_comptable) D.settings.historique_envois_comptable=[];
+      D.settings.historique_envois_comptable.push({ periode:periode==='mois'?moisCourant:'Groupe', nb:aEnvoyer.length, total:total, date:now.toLocaleDateString('fr-FR') });
+      await saveJustificatifs();
+      await saveSetting();
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--success)">Envoye a ' + email + ' !</span>';
+      toast('Recapitulatif envoye au comptable !');
+      pgJustificatifs();
+    } else { throw new Error('err'); }
+  } catch(e) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">Echec de l'envoi.</span>';
+    toast('Erreur lors de l'envoi');
+  }
+}
+
+function exportJustifCSV() {
+  var justs = D.justificatifs || [];
+  if (!justs.length) { toast('Aucun justificatif'); return; }
+  var rows = ['Date,Fournisseur,Categorie,Montant TTC,Note,Envoye'];
+  justs.forEach(function(j){ rows.push([j.date||'',j.fournisseur||'',j.categorie||'',j.montant||0,j.note||'',j.envoye?'Oui':'Non'].join(',')); });
+  var blob = new Blob([rows.join('
+')],{type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download='justificatifs_batipilot.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Export CSV telecharge !');
 }
 
 function pgFacturation() {
