@@ -635,7 +635,7 @@ body.ct-mode
 <body>
 <div id="offline-indicator"></div>
 <div id="offline-badge" role="alert" aria-live="assertive">📵 Hors-ligne — Lecture seule</div>
-<div id="loader" style="display:flex"><div class="loader-logo">Bati<span>Pilot</span></div><div class="spinner"></div><div class="loader-text" id="loader-text">Vérification de la session...</div><div id="loader-retry" style="display:none;margin-top:20px"><button onclick="window.location.reload()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:10px 24px;border-radius:20px;font-size:13px;cursor:pointer;font-family:inherit">↺ Recharger la page</button><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;text-align:center">Si le problème persiste, vérifiez votre connexion</div></div></div>
+<div id="loader" style="display:flex"><div class="loader-logo" id="loader-logo-wrap"><img id="loader-logo-img" src="" alt="BatiPilot" style="max-height:48px;max-width:160px;object-fit:contain;display:none;filter:brightness(0) invert(1)"><span id="loader-logo-text">Bati<span style="color:var(--accent)">Pilot</span></span></div><div class="spinner"></div><div class="loader-text" id="loader-text">Vérification de la session...</div><div id="loader-retry" style="display:none;margin-top:20px"><button onclick="window.location.reload()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:10px 24px;border-radius:20px;font-size:13px;cursor:pointer;font-family:inherit">↺ Recharger la page</button><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;text-align:center">Si le problème persiste, vérifiez votre connexion</div></div></div>
 
 <div id="auth-screen" style="display:none">
   <div class="auth-card">
@@ -852,7 +852,7 @@ body.ct-mode
 
 <div id="app">
   <nav id="sidebar">
-    <div class="sidebar-logo"><div class="logo-mark"><div class="logo-icon">🏗️</div>BatiPilot</div><div class="logo-sub">Gestion de chantiers</div></div>
+    <div class="sidebar-logo" id="sidebar-logo-wrap"><div class="logo-mark"><img id="sidebar-logo-img" src="" alt="BatiPilot" style="max-height:44px;max-width:130px;object-fit:contain;display:none;filter:brightness(0) invert(1)"><div id="sidebar-logo-text" class="logo-icon-text"><div class="logo-icon">🏗️</div>BatiPilot</div></div><div class="logo-sub" id="sidebar-logo-sub">Gestion de chantiers</div></div>
     <div class="company-tag" id="sidebar-company">—</div>
     <nav class="sidebar-nav">
       <div class="nav-label">Vue d'ensemble</div>
@@ -2628,6 +2628,24 @@ function launchApp(){
   setTimeout(cacheDataForOffline, 2000);
   showOnboardingWaouh();
   applyAccent();
+  // Appliquer le logo dans la sidebar et le loader
+  (function(){
+    var logo = D.settings.logo || '';
+    var sImg = document.getElementById('sidebar-logo-img');
+    var sTxt = document.getElementById('sidebar-logo-text');
+    var lImg = document.getElementById('loader-logo-img');
+    var lTxt = document.getElementById('loader-logo-text');
+    if (logo && sImg) {
+      sImg.src = logo;
+      sImg.style.display = 'block';
+      if (sTxt) sTxt.style.display = 'none';
+    }
+    if (logo && lImg) {
+      lImg.src = logo;
+      lImg.style.display = 'block';
+      if (lTxt) lTxt.style.display = 'none';
+    }
+  })();
   renderPlanBadgeV9();
   initCommercial();
   const sc = $('sidebar-company');
@@ -2637,6 +2655,17 @@ function launchApp(){
   if (sw) sw.classList.add('visible');
   updateMobileNav('dashboard');
   go('dashboard');
+  // Bulle de présentation Bob — apparaît après 2s, disparaît après 8s
+  setTimeout(function(){
+    var bubble = document.getElementById('bob-bubble');
+    if (bubble) {
+      bubble.style.opacity = '1';
+      bubble.style.transform = 'translateY(0)';
+      bubble.style.pointerEvents = 'auto';
+      bubble.onclick = function(){ bpsToggle(); this.style.opacity='0'; };
+      setTimeout(function(){ if(bubble) { bubble.style.opacity='0'; bubble.style.pointerEvents='none'; } }, 8000);
+    }
+  }, 2500);
   setTimeout(checkPaywall, 1500);
   initOfflineSupport();
   // sidebar/mobile-nav gérés EXCLUSIVEMENT par CSS @media
@@ -7863,10 +7892,10 @@ function _dashQuickLink(page, ico, label, sub) {
 /* ── Bouton flottant support ── */
 #bp-support-btn{
   position:fixed;bottom:calc(68px + env(safe-area-inset-bottom,0px));right:16px;
-  width:48px;height:48px;border-radius:50%;
-  background:linear-gradient(135deg,#1C2B4A,#2D3E8C);
+  width:44px;height:44px;border-radius:50%;
+  background:var(--accent);
   color:white;font-size:22px;border:none;cursor:pointer;
-  box-shadow:0 4px 16px rgba(28,43,74,0.45);
+  box-shadow:0 4px 14px rgba(192,98,42,0.35);
   display:flex;align-items:center;justify-content:center;
   z-index:2000;transition:transform 0.2s,box-shadow 0.2s;
   touch-action:manipulation;
@@ -7956,19 +7985,31 @@ function _dashQuickLink(page, ico, label, sub) {
 @keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 </style>
 
+<!-- Bulle de présentation Bob -->
+<div id="bob-bubble" style="
+  position:fixed;bottom:calc(120px + env(safe-area-inset-bottom,0px));right:16px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:10px 14px;
+  font-size:13px;color:var(--text);max-width:200px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:1999;
+  opacity:0;transform:translateY(8px);transition:opacity 0.4s,transform 0.4s;
+  pointer-events:none;line-height:1.4;white-space:nowrap">
+  👷 <strong>Bob</strong> — Besoin d'aide ?<br>
+  <span style="font-size:11px;color:var(--text-muted)">Votre assistant IA BatiPilot</span>
+  <div style="position:absolute;bottom:-7px;right:18px;width:14px;height:14px;background:var(--bg-card);border-right:1px solid var(--border);border-bottom:1px solid var(--border);transform:rotate(45deg)"></div>
+</div>
+
 <!-- Bouton flottant -->
 <button id="bp-support-btn" onclick="bpsToggle()" title="Aide & Support IA" aria-label="Support">
-  <span id="bp-support-icon">💬</span>
-  <span id="bp-support-badge">?</span>
+  <span id="bp-support-icon">👷</span>
 </button>
 
 <!-- Panel chat -->
 <div id="bp-support-panel" role="dialog" aria-label="Support BatiPilot">
   <div class="bps-header">
-    <span class="bps-avatar">🏗️</span>
+    <span class="bps-avatar">👷</span>
     <div>
-      <div class="bps-title">Assistant BatiPilot</div>
-      <div class="bps-sub">Répond en quelques secondes</div>
+      <div class="bps-title">Bob — Assistant IA</div>
+      <div class="bps-sub">Je réponds en quelques secondes</div>
     </div>
     <button class="bps-close" onclick="bpsToggle()" aria-label="Fermer">×</button>
   </div>
@@ -8043,6 +8084,9 @@ function bpsToggle() {
     panel.classList.add('open');
     btn.classList.add('open');
     icon.textContent = '×';
+    // Masquer la bulle de présentation
+    var bubble = document.getElementById('bob-bubble');
+    if (bubble) { bubble.style.opacity = '0'; bubble.style.pointerEvents = 'none'; }
     if (badge) badge.style.display = 'none';
     _bpsBadgeSeen = true;
     if (_bpsHistory.length === 0) _bpsWelcome();
@@ -8050,7 +8094,7 @@ function bpsToggle() {
   } else {
     panel.classList.remove('open');
     btn.classList.remove('open');
-    icon.textContent = '💬';
+    icon.textContent = '👷';
   }
 }
 
@@ -8060,10 +8104,11 @@ function _bpsWelcome() {
   var nCh  = (typeof D !== 'undefined' && D.chantiers) ? D.chantiers.length : 0;
   var name = s.company ? s.company.split(' ')[0] : null;
   var msg  = nCh === 0
-    ? 'Bonjour' + (name ? ' chez ' + name : '') + ' ! 👷 Je suis là pour vous aider à démarrer. Commencez par créer votre premier chantier — ça prend 30 secondes !'
-    : 'Bonjour' + (name ? ' !' : ' !') + ' 💬 Comment puis-je vous aider avec BatiPilot ?';
+    ? 'Salut' + (name ? ' ' + name : '') + ' ! 👷 Je suis Bob, votre assistant IA. Commencez par créer votre premier chantier — ça prend 30 secondes !'
+    : 'Bonjour' + (name ? ' ' + name + ' !' : ' !') + ' 👷 Je suis Bob. Comment puis-je vous aider ?';
   _bpsAddMsg(msg, 'bot');
 }
+
 
 // ── Ajouter un message dans le chat ──────────────────────────────────
 function _bpsAddMsg(text, role) {
