@@ -2563,7 +2563,9 @@ async function loadAll(){
     D.time_entries    = D.time_entries  || [];
 
     hideLoader();
-    const noSettings = !sr.data && !sr.error;
+    // noSettings = vrai premier lancement uniquement
+    // Si sr.error existe (RLS, réseau) → on lance l'app quand meme
+    const noSettings = !sr.data && !sr.error && !D.settings.company;
     if (noSettings) {
       $('onboarding').style.display='flex';
       obRenderMetrics(); obRenderCats();
@@ -5066,9 +5068,13 @@ async function startApp(user) {
   loader('Chargement de vos données...');
 
   // ── Détecter si l'utilisateur est membre d'une équipe Team ──────
+  // Timeout 3s : si la fonction SQL n'est pas encore déployée ou réseau lent,
+  // on passe en mode solo silencieusement sans bloquer le chargement
   try {
-    const { data: teamInfo, error: teamErr } = await SB.rpc('get_my_team_info');
-    if (!teamErr && teamInfo) {
+    const teamTimeout = new Promise((_,r) => setTimeout(() => r(new Error('team_timeout')), 3000));
+    const teamResult  = await Promise.race([SB.rpc('get_my_team_info'), teamTimeout]);
+    const teamInfo = teamResult?.data;
+    if (teamInfo && !teamResult?.error) {
       D.team.is_member    = teamInfo.is_member    || false;
       D.team.owner_id     = teamInfo.owner_id     || USER.id;
       D.team.members      = teamInfo.members      || [];
@@ -5079,7 +5085,7 @@ async function startApp(user) {
       D.team.owner_id = USER.id;
     }
   } catch(e) {
-    D.team.owner_id = USER.id; // fallback silencieux
+    D.team.owner_id = USER.id; // fallback : SQL pas encore déployé ou timeout
   }
 
   // Timeout global de sécurité : si tout plante, on montre l'écran de login
