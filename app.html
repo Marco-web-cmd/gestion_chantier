@@ -4821,7 +4821,7 @@ function modalEmployee(id) {
       +'<textarea id="st-taches" rows="4" placeholder="Décrivez les travaux, prestations, délais attendus..." style="width:100%;resize:vertical">'+(e&&e.st_taches?esc(e.st_taches):'')+'</textarea></div>'
     +'<div class="form-row form-row-2">'
       +'<div class="form-group"><label>Montant HT (€)</label><input id="st-montant" type="number" step="0.01" min="0" value="'+(e&&e.st_montant?e.st_montant:'')+'" placeholder="0.00"></div>'
-      +'<div class="form-group"><label>Délai d'exécution</label><input id="st-delai" value="'+(e&&e.st_delai?esc(e.st_delai):'')+'" placeholder="Ex: 2 semaines, avant le 30/06..."></div>'
+      +'<div class="form-group"><label>Délai d\'exécution</label><input id="st-delai" value="'+(e&&e.st_delai?esc(e.st_delai):'')+'" placeholder="Ex: 2 semaines, avant le 30/06..."></div>'
     +'</div>'
     +'<button class="btn btn-secondary w-full" onclick="envoyerBonCommande()" style="margin-top:4px">📧 Envoyer le bon de commande par email</button>'
     +'</div>';
@@ -5296,7 +5296,7 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 window.addEventListener('appinstalled', () => {
   _pwaInstallPrompt = null;
-  toast('BatiPilot installé sur l’écran d’accueil ! ✅');
+  toast('BatiPilot installé sur l\'écran d\'accueil ! ✅');
 });
 function installPWA() {
   if (_pwaInstallPrompt) {
@@ -5306,13 +5306,13 @@ function installPWA() {
       _pwaInstallPrompt = null;
     });
   } else {
-    var iosSteps = '1. Appuyez sur le bouton Partager dans Safari<br>2. Choisissez Ajouter sur l’écran d’accueil';
+    var iosSteps = '1. Appuyez sur le bouton Partager dans Safari<br>2. Choisissez Ajouter sur l\'écran d\'accueil';
     modal('📱 Installer BatiPilot',
       '<div style="font-size:14px;line-height:1.8;color:var(--text-muted)">'
       + '<strong>Sur iPhone/iPad :</strong><br>' + iosSteps + '<br><br>'
       + '<strong>Sur Android :</strong><br>'
-      + 'Chrome affiche une bannière d’installation automatiquement.<br>'
-      + 'Ou : Menu ⋮ → Ajouter à l’écran d’accueil'
+      + 'Chrome affiche une bannière d\'installation automatiquement.<br>'
+      + 'Ou : Menu ⋮ → Ajouter à l\'écran d\'accueil'
       + '</div>',
       '<button class="btn btn-secondary" onclick="closeModal()">Fermer</button>'
     );
